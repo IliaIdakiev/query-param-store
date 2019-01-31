@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy, Inject, Optional } from '@angular/core';
-import { Router, RouterEvent } from '@angular/router';
+import { Router, Event, NavigationStart } from '@angular/router';
 import { Subject, ReplaySubject, Subscription } from 'rxjs';
 import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 
@@ -21,9 +21,8 @@ export class QueryParamStoreService<T> implements OnDestroy {
     this.subscription = this.router.events.pipe(
       map((route) => [this.router.url, route]),
       distinctUntilChanged(([cUrl], [pUrl]) => cUrl === pUrl),
-      map(([url, route]: [string, RouterEvent]) => [url.match(/\?(.*)$/), route]),
-      map(([match, route]) => [!match ? '' : match[1], route]),
-      map(([qp, { snapshot }]) => {
+      map(([, route]: [string, any]) => {
+        const { snapshot = null } = (route || {});
         if (
           !snapshot || !snapshot.data ||
           (!snapshot.data.queryParamsConfig && !snapshot.data.noQueryParams)
@@ -47,10 +46,9 @@ export class QueryParamStoreService<T> implements OnDestroy {
           return acc;
         }, {});
 
-        const matches = qp.match(/([^&]*)=([^&]*)/g) || [];
         const result = { errors: {}, queryParams: null, flatDefaultValues };
-        const queryParams = matches.reduce((acc, match) => {
-          const [key, value] = match.split('=');
+        const queryParams = Object.entries(snapshot.queryParams).reduce((acc, match: [string, string]) => {
+          const [key, value] = match;
           if (supportedKeys.includes(key)) {
             const converter = keyTypeConverter[key];
             const newValue = converter(decodeURIComponent(value));
