@@ -1,5 +1,6 @@
 <nav>
   <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-  <a routerLink="/user" routerLinkActive="active">User</a>
+  <a routerLink="/user" routerLinkActive="active" queryParamsHandling="merge">User</a>
+  <a routerLink="/user/add" routerLinkActive="active" queryParamsHandling="merge">Add</a>
 </nav>
 <router-outlet></router-outlet>

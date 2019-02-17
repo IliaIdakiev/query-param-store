@@ -1,8 +1,9 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { ListComponent } from './list/list.component';
+import { IQueryParamStoreRoutes } from '../query-param-store/query-param-store-route';
 
-const routes: Routes = [
+const routes: IQueryParamStoreRoutes<any> = [
   {
     path: '',
     pathMatch: 'full',
@@ -13,16 +14,22 @@ const routes: Routes = [
     component: ListComponent,
     data: {
       queryParamsConfig: {
-        page: 0,
-        pageSize: 30,
-        filter: '',
-        test: {
-          value: null,
-          typeConvertor: String
-        }
+        defaultValues: {
+          page: 0,
+          pageSize: 30,
+          filter: '',
+          test: {
+            value: null,
+            typeConvertor: String
+          }
+        },
+        removeUnknown: true
       },
-      protected: true
     }
+  },
+  {
+    path: 'add',
+    component: ListComponent
   }
 ];
 

@@ -1,7 +1,8 @@
-import { Injectable, OnDestroy, Inject, Optional } from '@angular/core';
-import { Router, Event, NavigationStart } from '@angular/router';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Router, NavigationStart, ChildActivationStart, RoutesRecognized } from '@angular/router';
 import { Subject, ReplaySubject, Subscription } from 'rxjs';
-import { map, distinctUntilChanged, filter } from 'rxjs/operators';
+import { map, distinctUntilChanged, filter, tap } from 'rxjs/operators';
+import { IQueryParamStoreData } from './query-param-store-route';
 
 @Injectable()
 export class QueryParamStoreService<T> implements OnDestroy {
@@ -9,6 +10,7 @@ export class QueryParamStoreService<T> implements OnDestroy {
   isAlive: Subject<any> = new Subject<any>();
   store: ReplaySubject<T> = new ReplaySubject<T>();
   state: T;
+  stateUrl: string;
   defaultValues: any = {};
   subscription: Subscription;
 
@@ -19,20 +21,23 @@ export class QueryParamStoreService<T> implements OnDestroy {
   private constructHandler() {
     if (this.subscription) { return; }
     this.subscription = this.router.events.pipe(
+      tap(event => {
+        if (event instanceof RoutesRecognized) {
+          this.state = {} as T;
+          [this.stateUrl] = /[^?]+/.exec(event.urlAfterRedirects);
+        }
+      }),
       map((route) => [this.router.url, route]),
+      filter(([url, event]) => !!(event as any).snapshot && /[^?]+/.exec(url as string)[0] === this.stateUrl),
       distinctUntilChanged(([cUrl], [pUrl]) => cUrl === pUrl),
-      map(([, route]: [string, any]) => {
-        const { snapshot = null } = (route || {});
-        if (
-          !snapshot || !snapshot.data ||
-          (!snapshot.data.queryParamsConfig && !snapshot.data.noQueryParams)
-        ) {
-          return null;
-        } else if (snapshot.data.noQueryParams) {
+      map(([url, { snapshot }]: [string, any]) => {
+        const data: IQueryParamStoreData<any> = snapshot ? snapshot.data : { queryParamsConfig: { defaultValues: {} } };
+        if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
           this.router.navigate([], { queryParams: {} });
           return null;
         }
-        const defaultValues = snapshot.data.queryParamsConfig;
+        const { defaultValues = {}, noQueryParams = false, removeUnknown = false } =
+          (data.queryParamsConfig || { defaultValues: {}, noQueryParams: false, removeUnknown: false });
         const supportedKeys = Object.keys(defaultValues);
         const keyTypeConverter = supportedKeys.reduce((acc, key) => {
           const defaultValue = defaultValues[key];
@@ -49,8 +54,8 @@ export class QueryParamStoreService<T> implements OnDestroy {
         const result = { errors: {}, queryParams: null, flatDefaultValues };
         const queryParams = Object.entries(snapshot.queryParams).reduce((acc, match: [string, string]) => {
           const [key, value] = match;
-          if (supportedKeys.includes(key)) {
-            const converter = keyTypeConverter[key];
+          if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
+            const converter = keyTypeConverter[key] || String;
             const newValue = converter(decodeURIComponent(value));
             const isValidNumber = converter === Number && !Number.isNaN(newValue);
             const isValidString = converter === String && typeof newValue === 'string';
@@ -63,7 +68,7 @@ export class QueryParamStoreService<T> implements OnDestroy {
                 [key]: `Invalid ${!isValidNumber ? 'number' : 'string'}`
               };
             }
-          } else if (snapshot.data.protected) {
+          } else if (data.queryParamsConfig.removeUnknown) {
             result.errors = {
               ...result.errors,
               [key]: 'Unknown param'
