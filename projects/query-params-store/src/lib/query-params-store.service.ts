@@ -4,8 +4,10 @@ import { Subject, ReplaySubject, Subscription } from 'rxjs';
 import { map, distinctUntilChanged, filter, tap } from 'rxjs/operators';
 import { IQueryParamStoreData } from './query-param-store-route';
 
-@Injectable()
-export class QueryParamStoreService<T> implements OnDestroy {
+@Injectable({
+  providedIn: 'root'
+})
+export class QueryParamsStoreService<T> implements OnDestroy {
 
   isAlive: Subject<any> = new Subject<any>();
   store: ReplaySubject<T> = new ReplaySubject<T>();
@@ -14,7 +16,7 @@ export class QueryParamStoreService<T> implements OnDestroy {
   defaultValues: any = {};
   subscription: Subscription;
 
-  constructor(public router: Router, public handleInvalidValues: boolean) {
+  constructor(public router: Router) {
     this.constructHandler();
   }
 
@@ -81,16 +83,18 @@ export class QueryParamStoreService<T> implements OnDestroy {
       }),
       filter(val => !!val)
     ).subscribe(({ queryParams, errors, flatDefaultValues }) => {
-      if (this.handleInvalidValues) {
-        const errorKeys = Object.keys(errors);
-        const queryParamsCleanup = errorKeys.reduce((acc, key) => {
-          acc[key] = undefined;
-          return acc;
-        }, {});
-        if (errorKeys.length !== 0) {
-          this.router.navigate([], { queryParams: queryParamsCleanup, queryParamsHandling: 'merge' });
-        }
+
+      const errorKeys = Object.keys(errors);
+      const queryParamsCleanup = errorKeys.reduce((acc, key) => {
+        acc[key] = undefined;
+        return acc;
+      }, {});
+
+      if (errorKeys.length !== 0) {
+        this.router.navigate([], { queryParams: queryParamsCleanup, queryParamsHandling: 'merge' });
+        return;
       }
+
       this.state = Object.assign({}, this.state, flatDefaultValues, queryParams);
       this.store.next(this.state);
     });

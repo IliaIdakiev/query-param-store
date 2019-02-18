@@ -17,6 +17,14 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "query-params-store": [
+        "dist/query-params-store"
+      ],
+      "query-params-store/*": [
+        "dist/query-params-store/*"
+      ]
+    }
   }
 }

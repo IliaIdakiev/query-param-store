@@ -129,6 +129,41 @@
           }
         }
       }
+    },
+    "query-params-store": {
+      "root": "projects/query-params-store",
+      "sourceRoot": "projects/query-params-store/src",
+      "projectType": "library",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/query-params-store/tsconfig.lib.json",
+            "project": "projects/query-params-store/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/query-params-store/src/test.ts",
+            "tsConfig": "projects/query-params-store/tsconfig.spec.json",
+            "karmaConfig": "projects/query-params-store/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/query-params-store/tsconfig.lib.json",
+              "projects/query-params-store/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "query-param-store"
