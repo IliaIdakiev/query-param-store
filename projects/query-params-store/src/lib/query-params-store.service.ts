@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { Router, RoutesRecognized } from '@angular/router';
 import { Subject, ReplaySubject, Subscription } from 'rxjs';
 import { map, distinctUntilChanged, filter, tap } from 'rxjs/operators';
-import { IQueryParamStoreData } from './query-param-store-route';
+import { IQueryParamStoreData } from './query-params-store-route';
 
 @Injectable({
   providedIn: 'root'
