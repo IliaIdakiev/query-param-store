@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { Router, RoutesRecognized } from '@angular/router';
 import { Subject, ReplaySubject, Subscription } from 'rxjs';
 import { map, distinctUntilChanged, filter, tap } from 'rxjs/operators';
-import { IQueryParamStoreData } from './query-params-store-route';
+import { IQueryParamsStoreData } from './query-params-store-route';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +33,7 @@ export class QueryParamsStoreService<T> implements OnDestroy {
       filter(([url, event]) => !!(event as any).snapshot && /[^?]+/.exec(url as string)[0] === this.stateUrl),
       distinctUntilChanged(([cUrl], [pUrl]) => cUrl === pUrl),
       map(([url, { snapshot }]: [string, any]) => {
-        const data: IQueryParamStoreData<any> = snapshot ? snapshot.data : { queryParamsConfig: { defaultValues: {} } };
+        const data: IQueryParamsStoreData<any> = snapshot ? snapshot.data : { queryParamsConfig: { defaultValues: {} } };
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
           this.router.navigate([], { queryParams: {} });
           return null;

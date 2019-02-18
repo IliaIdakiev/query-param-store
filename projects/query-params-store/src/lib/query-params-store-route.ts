@@ -1,6 +1,6 @@
 import { Route } from '@angular/router';
 
-export interface IQueryParamStoreData<T> {
+export interface IQueryParamsStoreData<T> {
   queryParamsConfig?: {
     noQueryParams?: boolean;
     removeUnknown?: boolean;
@@ -9,9 +9,9 @@ export interface IQueryParamStoreData<T> {
   [key: string]: any;
 }
 
-export interface IQueryParamStoreRoute<T> extends Route {
-  data?: IQueryParamStoreData<T>;
+export interface IQueryParamsStoreRoute<T> extends Route {
+  data?: IQueryParamsStoreData<T>;
   [key: string]: any;
 }
 
-export type IQueryParamStoreRoutes<T> = IQueryParamStoreRoute<T>[];
+export type IQueryParamStoreRoutes<T> = IQueryParamsStoreRoute<T>[];
