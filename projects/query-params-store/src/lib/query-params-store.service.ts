@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Router, RoutesRecognized } from '@angular/router';
-import { Subject, ReplaySubject, Subscription } from 'rxjs';
+import { Router, RoutesRecognized, NavigationStart, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Subject, ReplaySubject, Subscription, of } from 'rxjs';
 import { map, distinctUntilChanged, filter, tap } from 'rxjs/operators';
 import { IQueryParamsStoreData } from './query-params-store-route';
 
@@ -24,31 +24,37 @@ export class QueryParamsStoreService<T> implements OnDestroy {
     if (this.subscription) { return; }
     this.subscription = this.router.events.pipe(
       tap(event => {
-        if (event instanceof RoutesRecognized) {
+        if (event instanceof NavigationStart) {
           this.state = {} as T;
-          [this.stateUrl] = /[^?]+/.exec(event.urlAfterRedirects);
+          [this.stateUrl] = /[^?]+/.exec(event.url);
         }
       }),
-      map((route) => [this.router.url, route]),
-      filter(([url, event]) => !!(event as any).snapshot && /[^?]+/.exec(url as string)[0] === this.stateUrl),
-      distinctUntilChanged(([cUrl], [pUrl]) => cUrl === pUrl),
-      map(([url, { snapshot }]: [string, any]) => {
-        const data: IQueryParamsStoreData<any> = snapshot ? snapshot.data : { queryParamsConfig: { defaultValues: {} } };
+      filter((event) => !!(event as any).snapshot && (event as any).snapshot.firstChild === null),
+      distinctUntilChanged((cUrl, pUrl) => cUrl === pUrl),
+      map(({ snapshot }: any) => {
+        const data: IQueryParamsStoreData<any> = snapshot ?
+          snapshot.data : { queryParamsConfig: { defaultValues: {}, removeUnknown: false } };
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          this.router.navigate([], { queryParams: {} });
+          this.router.navigate([this.stateUrl], { queryParams: {} });
           return null;
         }
         const { defaultValues = {}, noQueryParams = false, removeUnknown = false } =
           (data.queryParamsConfig || { defaultValues: {}, noQueryParams: false, removeUnknown: false });
-        const supportedKeys = Object.keys(defaultValues);
+        const allDefaultValues = snapshot.pathFromRoot.reduce(function (acc, curr) {
+          const currData = curr.data;
+          if (!currData || !currData.queryParamsConfig) { return acc; }
+          return { ...acc, ...(currData.queryParamsConfig.defaultValues || {}) };
+        }, defaultValues);
+
+        const supportedKeys = Object.keys(allDefaultValues);
         const keyTypeConverter = supportedKeys.reduce((acc, key) => {
-          const defaultValue = defaultValues[key];
-          acc[key] = defaultValue.typeConvertor || typeof defaultValue === 'number' ? Number : String;
+          const defaultValue = allDefaultValues[key];
+          acc[key] = defaultValue.typeConvertor || (typeof defaultValue === 'number' ? Number : String);
           return acc;
         }, {});
 
         const flatDefaultValues = supportedKeys.reduce((acc, key) => {
-          const currentValue = defaultValues[key];
+          const currentValue = allDefaultValues[key];
           acc[key] = currentValue.value !== undefined ? currentValue.value : currentValue;
           return acc;
         }, {});
@@ -91,7 +97,7 @@ export class QueryParamsStoreService<T> implements OnDestroy {
       }, {});
 
       if (errorKeys.length !== 0) {
-        this.router.navigate([], { queryParams: queryParamsCleanup, queryParamsHandling: 'merge' });
+        this.router.navigate([this.stateUrl], { queryParams: { ...queryParams, ...queryParamsCleanup }, queryParamsHandling: 'merge' });
         return;
       }
 

@@ -11,6 +11,6 @@ export class AppComponent {
   title = 'query-param-store';
 
   constructor(private store: QueryParamsStoreService<any>) {
-    store.store.subscribe(console.log);
+    store.store.subscribe((data) => console.log('app', data));
   }
 }
