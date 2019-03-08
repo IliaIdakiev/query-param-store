@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { QueryParamsStore } from 'query-params-store';
-// import { QueryParamStoreService } from './query-param-store/query-param-store.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -9,8 +9,10 @@ import { QueryParamsStore } from 'query-params-store';
 })
 export class AppComponent {
   title = 'query-param-store';
+  store: Observable<any>;
 
-  constructor(private store: QueryParamsStore<any>) {
-    store.store.subscribe((data) => console.log('app', data));
+  constructor(private qpsStore: QueryParamsStore<any>) {
+    this.store = qpsStore.store;
+    this.store.subscribe((data) => console.log('app', data));
   }
 }

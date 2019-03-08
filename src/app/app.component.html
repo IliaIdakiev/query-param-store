@@ -4,3 +4,13 @@
   <a routerLink="/user/add" routerLinkActive="active" queryParamsHandling="merge">Add</a>
 </nav>
 <router-outlet></router-outlet>
+
+<div>
+  Current Query Params {{ store | async | json }} (depending on current route configuration) <br>
+  (Check out browser console for more info on guard query params)
+</div>
+
+<div>
+  <a [routerLink]="['/user/list/test', { outlets: { 'test': ['test2'] } }]" routerLinkActive="active"
+    queryParamsHandling="merge" [queryParams]="{ page: 20, pageSize: 140 }">/user/list/test?page=20&pageSize=140</a>
+</div>
