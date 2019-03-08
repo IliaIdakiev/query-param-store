@@ -16,10 +16,10 @@ const routes: IQueryParamStoreRoutes<any> = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'test',
+    redirectTo: 'detail',
   },
   {
-    path: 'test',
+    path: 'detail',
     component: DetailComponent,
     resolve: [DetailResolver],
     canActivate: [DetailActivate],
