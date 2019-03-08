@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Router, NavigationStart, ActivationStart, ActivationEnd } from '@angular/router';
+import { Router, NavigationStart, ActivationEnd, ActivatedRouteSnapshot, RoutesRecognized } from '@angular/router';
 import { ReplaySubject, Subscription, Observable, } from 'rxjs';
-import { map, filter, tap } from 'rxjs/operators';
+import { map, filter, tap, distinctUntilChanged } from 'rxjs/operators';
 import { IQueryParamsStoreData } from './query-params-store-route';
 
 @Injectable({
@@ -9,42 +9,19 @@ import { IQueryParamsStoreData } from './query-params-store-route';
 })
 export class QueryParamsStoreService<T> implements OnDestroy {
 
-  private _store: ReplaySubject<T> = new ReplaySubject<T>(1);
-  state: T;
-  stateUrl: string;
+  private _snapshot: ReplaySubject<any> = new ReplaySubject<any>(1);
+  url: string;
   subscription: Subscription;
 
   get store(): Observable<T> {
-    return this._store.pipe(filter(val => !!val));
-  }
-
-  constructor(public router: Router) {
-    this.constructHandler();
-  }
-
-  private constructHandler() {
-    if (this.subscription) { return; }
-    this.subscription = this.router.events.pipe(
-      filter(event => !(event instanceof ActivationEnd)),
-      tap(event => {
-        if (event instanceof NavigationStart) {
-          this.state = {} as T;
-
-          [this.stateUrl] = /[^?]+/.exec(event.url);
-        } else if (event instanceof ActivationStart) {
-          this._store.next(null);
-        }
-      }),
-      filter((event) => {
-        const snapshot = (event as any).snapshot;
-        return !!snapshot && snapshot.firstChild === null;
-      }),
-      map(({ snapshot }: any) => {
+    return this._snapshot.pipe(
+      filter(val => !!val),
+      map((snapshot: any) => {
         const data: IQueryParamsStoreData<any> = snapshot.data ||
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          this.router.navigate([this.stateUrl], { queryParams: {} });
+          this.router.navigate([this.url], { queryParams: {} });
           return null;
         }
 
@@ -97,24 +74,57 @@ export class QueryParamsStoreService<T> implements OnDestroy {
           return acc;
         }, {});
         result.queryParams = queryParams;
-        return result;
+
+        const errorKeys = Object.keys(result.errors);
+        const queryParamsCleanup = errorKeys.reduce((acc, key) => {
+          acc[key] = undefined;
+          return acc;
+        }, {});
+
+        if (errorKeys.length !== 0) {
+          this.router.navigate(
+            [this.url], { queryParams: { ...result.queryParams, ...queryParamsCleanup }, queryParamsHandling: 'merge' }
+          );
+          return;
+        }
+
+        return Object.assign({}, result.flatDefaultValues, result.queryParams);
+      }));
+  }
+
+  constructor(public router: Router) {
+    this.constructHandler();
+  }
+
+  private constructHandler() {
+    if (this.subscription) { return; }
+    this.subscription = this.router.events.pipe(
+      filter(event => !(event instanceof ActivationEnd)),
+      tap(event => {
+        if (event instanceof NavigationStart) {
+          [this.url] = /[^?]+/.exec(event.url);
+        } else if (event instanceof RoutesRecognized) {
+          [this.url] = /[^?]+/.exec(event.urlAfterRedirects);
+        }
       }),
-      filter(val => !!val)
-    ).subscribe(({ queryParams, errors, flatDefaultValues }) => {
-
-      const errorKeys = Object.keys(errors);
-      const queryParamsCleanup = errorKeys.reduce((acc, key) => {
-        acc[key] = undefined;
-        return acc;
-      }, {});
-
-      if (errorKeys.length !== 0) {
-        this.router.navigate([this.stateUrl], { queryParams: { ...queryParams, ...queryParamsCleanup }, queryParamsHandling: 'merge' });
-        return;
-      }
-
-      this.state = Object.assign({}, this.state, flatDefaultValues, queryParams);
-      this._store.next(this.state);
+      filter((event) => {
+        const snapshot = (event as any).snapshot;
+        return !!snapshot;
+      }),
+      map(({ snapshot }: { snapshot: ActivatedRouteSnapshot }) => {
+        let currSnapshot = snapshot;
+        while (currSnapshot && currSnapshot.children.length !== 0) {
+          currSnapshot = currSnapshot.children.find(childSnapshot => {
+            return this.url === '/' && childSnapshot.url.length === 0
+              || !!childSnapshot.url.find(segment => this.url.includes(segment.path));
+          });
+        }
+        return currSnapshot;
+      }),
+      filter(val => !!val),
+      distinctUntilChanged()
+    ).subscribe((snapshot) => {
+      this._snapshot.next(snapshot);
     });
   }
 

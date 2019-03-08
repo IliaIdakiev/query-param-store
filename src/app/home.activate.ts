@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate } from '@angular/router';
 import { Observable } from 'rxjs';
-import { QueryParamsStoreService2 } from 'query-params-store';
+import { QueryParamsStoreService } from 'query-params-store';
 import { tap, first, mapTo } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class HomeActivate implements CanActivate {
 
   constructor(
-    private queryParamsStoreService: QueryParamsStoreService2<any>
+    private queryParamsStoreService: QueryParamsStoreService<any>
   ) { }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
