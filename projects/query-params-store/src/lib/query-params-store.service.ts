@@ -43,11 +43,14 @@ export class QueryParamsStore<T> implements OnDestroy {
 
         const flatDefaultValues = supportedKeys.reduce((acc, key) => {
           const currentValue = allDefaultValues[key];
-          acc[key] = currentValue.value !== undefined ? currentValue.value : currentValue;
+          acc[key] = currentValue.value !== undefined ?
+            currentValue.multi && currentValue.value !== null ? `${currentValue.value}`
+              .split(currentValue.separator || ';').map(val => (currentValue.typeConvertor || String)(val)) :
+              currentValue.value : currentValue;
           return acc;
         }, {});
 
-        const result = { errors: {}, queryParams: null, flatDefaultValues };
+        const result = { errors: {}, queryParams: null };
 
         const queryParams = Object.entries(snapshot.queryParams).reduce((acc, match: [string, string]) => {
           const [key, value] = match;
@@ -96,7 +99,7 @@ export class QueryParamsStore<T> implements OnDestroy {
           return;
         }
 
-        return Object.assign({}, result.flatDefaultValues, result.queryParams);
+        return Object.assign({}, flatDefaultValues, result.queryParams);
       }));
   }
 

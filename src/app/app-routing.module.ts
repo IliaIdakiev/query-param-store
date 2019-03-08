@@ -14,7 +14,7 @@ const routes: IQueryParamStoreRoutes<any> = [
       queryParamsConfig: {
         defaultValues: {
           page: {
-            value: null,
+            value: '1;2;3',
             typeConvertor: Number,
             multi: true,
             separator: ';'
