@@ -100,7 +100,9 @@ export class QueryParamsStore<T> implements OnDestroy {
         }
 
         return Object.assign({}, flatDefaultValues, result.queryParams);
-      }));
+      }),
+      filter(val => !!val)
+    );
   }
 
   constructor(public router: Router) {
