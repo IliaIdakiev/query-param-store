@@ -23,6 +23,7 @@ const routes: IQueryParamStoreRoutes<any> = [
         defaultValues: {
           best: {
             value: null,
+            multi: false,
             typeConvertor: String
           },
         },

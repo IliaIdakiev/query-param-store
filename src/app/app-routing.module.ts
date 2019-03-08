@@ -2,15 +2,25 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { HomeActivate } from './home.activate';
+import { IQueryParamStoreRoutes } from 'projects/query-params-store/src/public_api';
 
-const routes: Routes = [
+const routes: IQueryParamStoreRoutes<any> = [
   {
     path: '',
     pathMatch: 'full',
     component: HomeComponent,
     canActivate: [HomeActivate],
     data: {
-      noQueryParams: true
+      queryParamsConfig: {
+        defaultValues: {
+          page: {
+            value: null,
+            typeConvertor: Number,
+            multi: true,
+            separator: ';'
+          }
+        }
+      }
     }
   },
   {

@@ -52,19 +52,27 @@ export class QueryParamsStore<T> implements OnDestroy {
         const queryParams = Object.entries(snapshot.queryParams).reduce((acc, match: [string, string]) => {
           const [key, value] = match;
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
-            const converter = keyTypeConverter[key] || String;
-            const newValue = converter(decodeURIComponent(value));
-            const isValidNumber = converter === Number && !Number.isNaN(newValue);
-            const isValidString = converter === String && typeof newValue === 'string';
-            if (isValidNumber || isValidString) {
-              acc[key] = newValue;
-            } else {
-              acc[key] = flatDefaultValues[key];
-              result.errors = {
-                ...result.errors,
-                [key]: `Invalid ${!isValidNumber ? 'number' : 'string'}`
-              };
-            }
+            const decodedValue = decodeURIComponent(value);
+            const keyConfig = allDefaultValues[key];
+            (keyConfig.multi ? decodedValue.split(keyConfig.separator || ';') : [decodedValue]).forEach(currentDecodedValue => {
+              const converter = keyTypeConverter[key] || String;
+              const newValue = converter(currentDecodedValue);
+              const isValidNumber = converter === Number && !Number.isNaN(newValue);
+              const isValidString = converter === String && typeof newValue === 'string';
+              if (isValidNumber || isValidString) {
+                if (keyConfig.multi) {
+                  acc[key] = (acc[key] || []).concat(newValue);
+                } else {
+                  acc[key] = newValue;
+                }
+              } else {
+                acc[key] = flatDefaultValues[key];
+                result.errors = {
+                  ...result.errors,
+                  [key]: `Invalid ${!isValidNumber ? 'number' : 'string'}`
+                };
+              }
+            });
           } else if (data.queryParamsConfig.removeUnknown) {
             result.errors = {
               ...result.errors,
