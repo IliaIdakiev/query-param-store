@@ -4,6 +4,7 @@ import { DetailComponent } from './detail.component';
 import { IQueryParamStoreRoutes } from 'query-params-store';
 import { DetailResolver } from './detail.resolver';
 import { DetailDeactivate } from './detail.deactivate';
+import { DetailActivate } from './detail.activate';
 
 const routes: IQueryParamStoreRoutes<any> = [
   {
@@ -15,6 +16,7 @@ const routes: IQueryParamStoreRoutes<any> = [
     path: 'test',
     component: DetailComponent,
     resolve: [DetailResolver],
+    canActivate: [DetailActivate],
     canDeactivate: [DetailDeactivate],
     data: {
       queryParamsConfig: {
@@ -22,8 +24,9 @@ const routes: IQueryParamStoreRoutes<any> = [
           best: {
             value: null,
             typeConvertor: String
-          }
+          },
         },
+        inherit: true,
         removeUnknown: true
       },
     }

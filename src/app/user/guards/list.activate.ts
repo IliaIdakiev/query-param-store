@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
-import { CanDeactivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate } from '@angular/router';
 import { Observable } from 'rxjs';
 import { QueryParamsStoreService2 } from 'query-params-store';
 import { tap, first, mapTo } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
-export class DetailDeactivate implements CanDeactivate<Observable<boolean>> {
+export class ListActivate implements CanActivate {
 
   constructor(
     private queryParamsStoreService: QueryParamsStoreService2<any>
   ) { }
 
-  canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
     return this.queryParamsStoreService.store.pipe(tap((data) => {
-      console.log('detail deactivate', data);
+      console.log('list can activate', data);
     }), first(), mapTo(true));
   }
 }

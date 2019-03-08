@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { ListComponent } from './list/list.component';
 import { IQueryParamStoreRoutes } from '../query-param-store/query-param-store-route';
 import { ListResolver } from './guards/list.resolver';
+import { ListActivate } from './guards/list.activate';
 
 const routes: IQueryParamStoreRoutes<any> = [
   {
@@ -13,6 +14,7 @@ const routes: IQueryParamStoreRoutes<any> = [
   {
     path: 'list',
     // component: ListComponent,
+    canActivate: [ListActivate],
     resolve: [ListResolver],
     loadChildren: './detail/detail.module#DetailModule',
     data: {
