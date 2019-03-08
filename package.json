@@ -1,5 +1,5 @@
 {
-  "name": "query-param-store",
+  "name": "query-params-store",
   "version": "0.0.4",
   "scripts": {
     "ng": "ng",
