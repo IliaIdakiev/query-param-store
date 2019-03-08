@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ListComponent } from './list/list.component';
-import { IQueryParamStoreRoutes } from '../query-param-store/query-param-store-route';
 import { ListResolver } from './guards/list.resolver';
 import { ListActivate } from './guards/list.activate';
+import { IQueryParamStoreRoutes } from 'query-params-store';
 
 const routes: IQueryParamStoreRoutes<any> = [
   {
@@ -13,7 +13,6 @@ const routes: IQueryParamStoreRoutes<any> = [
   },
   {
     path: 'list',
-    // component: ListComponent,
     canActivate: [ListActivate],
     resolve: [ListResolver],
     loadChildren: './detail/detail.module#DetailModule',
@@ -25,7 +24,8 @@ const routes: IQueryParamStoreRoutes<any> = [
           filter: '',
           test: {
             value: null,
-            typeConvertor: String
+            typeConvertor: String,
+            multi: false
           }
         },
         removeUnknown: true

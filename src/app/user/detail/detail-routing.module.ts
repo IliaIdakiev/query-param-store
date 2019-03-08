@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { DetailComponent } from './detail.component';
 import { IQueryParamStoreRoutes } from 'query-params-store';
-import { DetailResolver } from './detail.resolver';
-import { DetailDeactivate } from './detail.deactivate';
-import { DetailActivate } from './detail.activate';
+import { DetailResolver } from './guards/detail.resolver';
+import { DetailDeactivate } from './guards/detail.deactivate';
+import { DetailActivate } from './guards/detail.activate';
 import { TestComponent } from './test/test.component';
 import { Test2Component } from './test2/test2.component';
-import { TestActivate } from './test.activate';
-import { Test2Activate } from './test2.activate';
-import { TestDeactivate } from './test.deactivate';
-import { Test2Deactivate } from './test2.deactivate';
+import { TestActivate } from './guards/test.activate';
+import { Test2Activate } from './guards/test2.activate';
+import { TestDeactivate } from './guards/test.deactivate';
+import { Test2Deactivate } from './guards/test2.deactivate';
 
 const routes: IQueryParamStoreRoutes<any> = [
   {
