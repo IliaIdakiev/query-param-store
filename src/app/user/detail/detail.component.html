@@ -1,3 +1,10 @@
 <p>
   detail works!
 </p>
+<div>
+  <nav>
+    <a [routerLink]="['.', { outlets: { 'test': ['test']}}]">Test</a>
+    <a [routerLink]="['.', { outlets: { 'test': ['test2']}}]">Test 2</a>
+  </nav>
+</div>
+<router-outlet name="test"></router-outlet>
