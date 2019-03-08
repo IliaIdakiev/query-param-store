@@ -7,7 +7,7 @@ import { IQueryParamsStoreData } from './query-params-store-route';
 @Injectable({
   providedIn: 'root'
 })
-export class QueryParamsStoreService<T> implements OnDestroy {
+export class QueryParamsStore<T> implements OnDestroy {
 
   private _snapshot: ReplaySubject<any> = new ReplaySubject<any>(1);
   url: string;

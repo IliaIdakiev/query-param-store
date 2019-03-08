@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { QueryParamsStoreService } from './query-params-store.service';
+import { QueryParamsStore } from './query-params-store.service';
 
-describe('QueryParamsStoreService', () => {
+describe('QueryParamsStore', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: QueryParamsStoreService = TestBed.get(QueryParamsStoreService);
+    const service: QueryParamsStore = TestBed.get(QueryParamsStore);
     expect(service).toBeTruthy();
   });
 });

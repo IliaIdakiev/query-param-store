@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { QueryParamsStoreService } from 'query-params-store';
+import { QueryParamsStore } from 'query-params-store';
 // import { QueryParamStoreService } from './query-param-store/query-param-store.service';
 
 @Component({
@@ -10,7 +10,7 @@ import { QueryParamsStoreService } from 'query-params-store';
 export class AppComponent {
   title = 'query-param-store';
 
-  constructor(private store: QueryParamsStoreService<any>) {
+  constructor(private store: QueryParamsStore<any>) {
     store.store.subscribe((data) => console.log('app', data));
   }
 }

@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
-import { QueryParamsStoreService } from 'query-params-store';
+import { QueryParamsStore } from 'query-params-store';
 import { tap, first } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class ListResolver implements Resolve<Observable<boolean>> {
 
   constructor(
-    private queryParamsStoreService: QueryParamsStoreService<any>
+    private queryParamsStore: QueryParamsStore<any>
   ) { }
 
   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    return this.queryParamsStoreService.store.pipe(tap((data) => {
+    return this.queryParamsStore.store.pipe(tap((data) => {
       console.log('list resolver', data);
     }), first());
   }
