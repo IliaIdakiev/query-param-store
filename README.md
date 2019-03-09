@@ -133,3 +133,5 @@ list.component.html
 
 
 Looking for an example app? [Check out this **simple demo**](https://stackblitz.com/github/IliaIdakiev/query-param-store)!
+
+(Deveoped with angular~7.1.0)
