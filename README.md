@@ -22,17 +22,23 @@ const listRoute: IQueryParamsStoreRoute = {
         pageSize: '30', // the query parameter - pageSize will be of type string with default value of '30'
         filter: {
           value: null, // the default value of the query parameter filter will be null
-          typeConvertor: String, // if a value inside the URL is provided it will be automatically parsed as String (possible values for typeConvertor - String | Number)
+          typeConvertor: String, // if a value inside the URL is provided it will be automatically parsed as String 
+          // (possible values for typeConvertor - String | Number)
           multi: false // it will be a single value (not an array)
         },
         sort: {
-          multi: true, // the provided value (either from the URL or the default one) will be threated as a string and it will be split by the given separator bellow
+          multi: true, // the provided value (either from the URL or the default one) will be threated as a string and it 
+          // will be split by the given separator bellow
           separator: ';' // the seperator that we split by
-          value: 'name:asc;email:asc;age:desc', // the default value of the query parameter sort will be ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and at the end we will recevice an array - ['name:asc', 'email:asc', 'age: desc'];
-          typeConvertor: String, // the convertor will be used on each value from the split array (possible values for typeConvertor - String | Number)
+          value: 'name:asc;email:asc;age:desc', // the default value of the query parameter sort will be 
+          // ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and 
+          // at the end we will recevice an array - ['name:asc', 'email:asc', 'age: desc'];
+          typeConvertor: String, // the convertor will be used on each value from the split array 
+          // (possible values for typeConvertor - String | Number)
         }
       },
-      removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property (default value - false)
+      removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property 
+      // (default value - false)
       noQueryParams: false, // remove all query params for current route (default value - false)
       inherit: true // inherit all query parameters from parent routes (default value - true)
     },
@@ -65,7 +71,7 @@ import { QueryParamsStore } from 'query-params-store';
 import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
-export class ListResolver implements Resolve<Observable<boolean>> {
+export class ListResolver implements Resolve<Observable<any[]>> {
 
   constructor(
     private queryParamsStore: QueryParamsStore,
