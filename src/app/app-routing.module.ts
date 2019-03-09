@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { HomeActivate } from './home.activate';
 import { IQueryParamStoreRoutes } from 'projects/query-params-store/src/public_api';
 
-const routes: IQueryParamStoreRoutes<any> = [
+const routes: IQueryParamStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',

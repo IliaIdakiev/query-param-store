@@ -12,7 +12,7 @@ import { Test2Activate } from './guards/test2.activate';
 import { TestDeactivate } from './guards/test.deactivate';
 import { Test2Deactivate } from './guards/test2.deactivate';
 
-const routes: IQueryParamStoreRoutes<any> = [
+const routes: IQueryParamStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',

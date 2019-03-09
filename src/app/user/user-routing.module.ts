@@ -5,7 +5,7 @@ import { ListResolver } from './guards/list.resolver';
 import { ListActivate } from './guards/list.activate';
 import { IQueryParamStoreRoutes } from 'query-params-store';
 
-const routes: IQueryParamStoreRoutes<any> = [
+const routes: IQueryParamStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',

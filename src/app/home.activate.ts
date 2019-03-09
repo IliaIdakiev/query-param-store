@@ -8,7 +8,7 @@ import { tap, first, mapTo } from 'rxjs/operators';
 export class HomeActivate implements CanActivate {
 
   constructor(
-    private queryParamsStore: QueryParamsStore<any>
+    private queryParamsStore: QueryParamsStore
   ) { }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {

@@ -11,7 +11,7 @@ export class AppComponent {
   title = 'query-param-store';
   store: Observable<any>;
 
-  constructor(private qpsStore: QueryParamsStore<any>) {
+  constructor(private qpsStore: QueryParamsStore) {
     this.store = qpsStore.store;
     this.store.subscribe((data) => console.log('app', data));
   }

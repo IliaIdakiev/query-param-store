@@ -8,7 +8,7 @@ import { tap, first } from 'rxjs/operators';
 export class ListResolver implements Resolve<Observable<boolean>> {
 
   constructor(
-    private queryParamsStore: QueryParamsStore<any>
+    private queryParamsStore: QueryParamsStore
   ) { }
 
   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {

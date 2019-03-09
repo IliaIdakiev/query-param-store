@@ -8,7 +8,7 @@ import { tap, first, mapTo } from 'rxjs/operators';
 export class TestDeactivate implements CanDeactivate<Observable<boolean>> {
 
   constructor(
-    private queryParamsStore: QueryParamsStore<any>
+    private queryParamsStore: QueryParamsStore
   ) { }
 
   canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {

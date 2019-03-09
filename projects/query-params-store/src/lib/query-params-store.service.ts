@@ -4,20 +4,22 @@ import { ReplaySubject, Subscription, Observable, } from 'rxjs';
 import { map, filter, tap, distinctUntilChanged } from 'rxjs/operators';
 import { IQueryParamsStoreData } from './query-params-store-route';
 
+type SelectorFn<T> = (any) => T;
+
 @Injectable({
   providedIn: 'root'
 })
-export class QueryParamsStore<T> implements OnDestroy {
+export class QueryParamsStore<T = any> implements OnDestroy {
 
-  private _snapshot: ReplaySubject<any> = new ReplaySubject<any>(1);
+  private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(1);
   url: string;
   subscription: Subscription;
 
   get store(): Observable<T> {
     return this._snapshot.pipe(
       filter(val => !!val),
-      map((snapshot: any) => {
-        const data: IQueryParamsStoreData<any> = snapshot.data ||
+      map(snapshot => {
+        const data: IQueryParamsStoreData = snapshot.data ||
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
@@ -140,6 +142,11 @@ export class QueryParamsStore<T> implements OnDestroy {
     ).subscribe((snapshot) => {
       this._snapshot.next(snapshot);
     });
+  }
+
+  select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
+    const fn = typeof selector === 'string' ? state => state[selector] : selector;
+    return this.store.pipe(map(fn));
   }
 
   ngOnDestroy() {
