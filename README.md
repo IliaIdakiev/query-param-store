@@ -32,13 +32,13 @@ const listRoute: IQueryParamsStoreRoute = {
           separator: ';' // the seperator that we split by
           value: 'name:asc;email:asc;age:desc', // the default value of the query parameter sort will be 
           // ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and 
-          // at the end we will recevice an array - ['name:asc', 'email:asc', 'age: desc'];
+          // at the end we will recevice an array - ['name:asc', 'email:asc', 'age:desc'];
           typeConvertor: String, // the convertor will be used on each value from the split array 
           // (possible values for typeConvertor - String | Number)
         }
       },
       removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property 
-      // (default value - false)
+      // (default value - false) (this triggers a router.navigate with all unknown query params set to undefined)
       noQueryParams: false, // remove all query params for current route (default value - false)
       inherit: true // inherit all query parameters from parent routes (default value - true)
     },
