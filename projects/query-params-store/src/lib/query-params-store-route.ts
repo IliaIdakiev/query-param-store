@@ -27,7 +27,7 @@ export type QueryParamsStoreDefaultMultiValue = string | number | {
   separator: string
 };
 
-export interface IQueryParamsStoreRoute<T> extends Route {
+export interface IQueryParamsStoreRoute<T = any> extends Route {
   data?: IQueryParamsStoreData<T>;
   [key: string]: any;
 }
