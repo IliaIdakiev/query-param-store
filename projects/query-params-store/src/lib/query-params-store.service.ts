@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { Router, NavigationStart, ActivationEnd, ActivatedRouteSnapshot, RoutesRecognized } from '@angular/router';
 import { ReplaySubject, Subscription, Observable, } from 'rxjs';
 import { map, filter, tap, distinctUntilChanged } from 'rxjs/operators';
-import { IQueryParamsStoreData } from './query-params-store-route';
+import { IQueryParamsStoreData } from './interfaces-and-types';
 
 type SelectorFn<T> = (any) => T;
 
