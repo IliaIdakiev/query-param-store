@@ -1,4 +1,5 @@
 import { Route } from '@angular/router';
+import { Observable } from 'rxjs';
 
 export interface IQueryParamsStoreData<T = any> {
   queryParamsConfig?: {
@@ -10,6 +11,10 @@ export interface IQueryParamsStoreData<T = any> {
     };
   };
   [key: string]: any;
+}
+
+export interface IQueryParamStoreRestrictor {
+  check(queryParamName: string, queryParamValue: QueryParamsStoreDefaultValue): Observable<boolean> | Promise<boolean> | boolean;
 }
 
 export type QueryParamsStoreDefaultValue = QueryParamsStoreDefaultGenericValue | QueryParamsStoreDefaultMultiValue;
@@ -24,7 +29,7 @@ export type QueryParamsStoreDefaultMultiValue = string | number | {
   value: string,
   multi: true,
   typeConvertor: StringConstructor | NumberConstructor;
-  separator: string
+  separator: string,
 };
 
 export interface IQueryParamsStoreRoute<T = any> extends Route {
@@ -33,3 +38,10 @@ export interface IQueryParamsStoreRoute<T = any> extends Route {
 }
 
 export type IQueryParamStoreRoutes<T = any> = IQueryParamsStoreRoute<T>[];
+
+export interface IAllowedValuesConfig {
+  [paramName: string]: {
+    match: string | number | (string | number)[],
+    default?: string | number
+  };
+}

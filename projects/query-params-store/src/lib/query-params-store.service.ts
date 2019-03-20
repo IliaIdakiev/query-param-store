@@ -1,8 +1,8 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Router, NavigationStart, ActivationEnd, ActivatedRouteSnapshot, RoutesRecognized } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, } from 'rxjs';
-import { map, filter, tap, distinctUntilChanged } from 'rxjs/operators';
-import { IQueryParamsStoreData } from './query-params-store-route';
+import { Router, NavigationStart, ActivationEnd, ActivatedRouteSnapshot, RoutesRecognized, DefaultUrlSerializer } from '@angular/router';
+import { ReplaySubject, Subscription, Observable, of as observableOf, Subject, BehaviorSubject } from 'rxjs';
+import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, switchMap, pairwise } from 'rxjs/operators';
+import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
 
 type SelectorFn<T> = (any) => T;
 
@@ -11,19 +11,30 @@ type SelectorFn<T> = (any) => T;
 })
 export class QueryParamsStore<T = any> implements OnDestroy {
 
-  private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(1);
+  private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
+  private _skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   url: string;
+  prevUrl: string;
   subscription: Subscription;
+  currentGuards: [] = [];
+
+  parseUrl(url: string) {
+    return new DefaultUrlSerializer().parse(url);
+  }
 
   get store(): Observable<T> {
     return this._snapshot.pipe(
+      skip(1),
       filter(val => !!val),
       map(snapshot => {
         const data: IQueryParamsStoreData = snapshot.data ||
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          this.router.navigate([this.url], { queryParams: {} });
+          const parsedURL = this.parseUrl(this.url);
+          this.router.navigateByUrl(parsedURL, {
+            queryParams: {}
+          });
           return null;
         }
 
@@ -96,9 +107,11 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         }, {});
 
         if (errorKeys.length !== 0) {
-          this.router.navigate(
-            [this.url], { queryParams: { ...result.queryParams, ...queryParamsCleanup }, queryParamsHandling: 'merge' }
-          );
+          const parsedURL = this.parseUrl(this.url);
+          this.router.navigateByUrl(parsedURL, {
+            queryParams: { ...result.queryParams, ...queryParamsCleanup },
+            queryParamsHandling: 'merge'
+          });
           return;
         }
 
@@ -110,6 +123,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
   constructor(public router: Router) {
     this.constructHandler();
+    this._snapshot.next(null);
   }
 
   private constructHandler() {
@@ -118,17 +132,18 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       filter(event => !(event instanceof ActivationEnd)),
       tap(event => {
         if (event instanceof NavigationStart) {
-          [this.url] = /[^?]+/.exec(event.url);
+          this.prevUrl = this.url || '';
+          this.url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
         } else if (event instanceof RoutesRecognized) {
-          [this.url] = /[^?]+/.exec(event.urlAfterRedirects);
+          this.url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
         }
       }),
-      filter((event) => {
+      filter(event => {
         const snapshot = (event as any).snapshot;
         return !!snapshot;
       }),
-      map(({ snapshot }: { snapshot: ActivatedRouteSnapshot }) => {
-        let currSnapshot = snapshot;
+      map(event => {
+        let currSnapshot = (event as any).snapshot;
         while (currSnapshot && currSnapshot.children.length !== 0) {
           currSnapshot = currSnapshot.children.find(childSnapshot => {
             return this.url === '/' && childSnapshot.url.length === 0
@@ -147,6 +162,39 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
     const fn = typeof selector === 'string' ? state => state[selector] : selector;
     return this.store.pipe(map(fn));
+  }
+
+  match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>): Observable<boolean> {
+    if (!(allowedValues instanceof Observable)) { allowedValues = observableOf(allowedValues); }
+    return this.store.pipe(
+      withLatestFrom(this._skip, allowedValues, this._snapshot.pipe(pairwise())),
+      tap(([, shouldSkip]) => { if (shouldSkip) { this._skip.next(false); } }),
+      filter(([, shouldSkip]) => !shouldSkip),
+      map(([queryParams, _shouldSkip, allowedValuesObj, [prevSnapshot, _currentSnapshot]]) => {
+        let successfulMatch = true;
+        let redirectQueryParams = {};
+        for (const [name, value] of Object.entries(queryParams)) {
+          const config = allowedValuesObj[name];
+          if (!config) { continue; }
+          const { match, default: defaultValue } = config;
+          const isCurrentMatch = (Array.isArray(match) ? match.includes(value) : value === match);
+          if (!isCurrentMatch && defaultValue) {
+            redirectQueryParams = { ...redirectQueryParams, [name]: defaultValue };
+          }
+          successfulMatch = successfulMatch && isCurrentMatch;
+        }
+        if (!successfulMatch) {
+          if (prevSnapshot) {
+            this._skip.next(true);
+            this._snapshot.next(prevSnapshot);
+          } else {
+            const parsedURL = this.parseUrl(this.prevUrl);
+            this.router.navigateByUrl(parsedURL);
+          }
+        }
+        return successfulMatch;
+      }),
+    );
   }
 
   ngOnDestroy() {
