@@ -93,6 +93,37 @@ export class ListResolver implements Resolve<Observable<any[]>> {
 }
 ```
 
+protect your routes from unwanted query parameters inside canActivate
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class ListActivate implements CanActivate {
+
+  constructor(
+    private queryParamsStore: QueryParamsStore<any>
+  ) { }
+
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
+    // if we have this route query params store configuration for the route
+    // data: {
+    //   queryParamsConfig: {
+    //     defaultValues: {
+    //       role: {
+    //         value: null,
+    //         multi: false,
+    //         typeConvertor: String
+    //       },
+    //     }
+    //   },
+    // },
+    // this guard will allow the route to be accessed only if the role query param is 'ADMIN' or the defaultValue from
+    // the configuration object (null). If we don't have a defaultValue we should add undefined instead of null
+    return this.queryParamsStore.match({ role: { match: [null, 'ADMIN'] } }).pipe(first());
+  }
+}
+
+```
+
 and inside our components:
 
 list.component.ts
