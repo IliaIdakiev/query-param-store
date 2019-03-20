@@ -130,7 +130,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     if (this.subscription) { return; }
     this.subscription = this.router.events.pipe(
       filter(event => !(event instanceof ActivationEnd)),
-      tap((event) => {
+      tap(event => {
         if (event instanceof NavigationStart) {
           this.prevUrl = this.url || '';
           this.url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
@@ -138,13 +138,11 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           this.url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
         }
       }),
-      filter((event) => {
+      filter(event => {
         const snapshot = (event as any).snapshot;
         return !!snapshot;
       }),
-      switchMap(event => this._snapshot.pipe(first(), map(prevSnapshot => ([event, prevSnapshot])))),
-      map(([event, prevSnapshot]) => {
-        console.log(prevSnapshot, 'prev snapshot');
+      map(event => {
         let currSnapshot = (event as any).snapshot;
         while (currSnapshot && currSnapshot.children.length !== 0) {
           currSnapshot = currSnapshot.children.find(childSnapshot => {
