@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Router, NavigationStart, ActivationEnd, ActivatedRouteSnapshot, RoutesRecognized, DefaultUrlSerializer } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, Subject } from 'rxjs';
+import { ReplaySubject, Subscription, Observable, of as observableOf, Subject, BehaviorSubject } from 'rxjs';
 import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, switchMap, pairwise } from 'rxjs/operators';
 import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
 
@@ -12,6 +12,7 @@ type SelectorFn<T> = (any) => T;
 export class QueryParamsStore<T = any> implements OnDestroy {
 
   private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
+  private _skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   url: string;
   prevUrl: string;
   subscription: Subscription;
@@ -168,8 +169,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>): Observable<boolean> {
     if (!(allowedValues instanceof Observable)) { allowedValues = observableOf(allowedValues); }
     return this.store.pipe(
-      withLatestFrom(allowedValues, this._snapshot.pipe(pairwise())),
-      map(([queryParams, allowedValuesObj, [prevSnapshot, _currentSnapshot]]) => {
+      withLatestFrom(this._skip, allowedValues, this._snapshot.pipe(pairwise())),
+      tap(([, shouldSkip]) => { if (shouldSkip) { this._skip.next(false); } }),
+      filter(([, shouldSkip]) => !shouldSkip),
+      map(([queryParams, _shouldSkip, allowedValuesObj, [prevSnapshot, _currentSnapshot]]) => {
         let successfulMatch = true;
         let redirectQueryParams = {};
         for (const [name, value] of Object.entries(queryParams)) {
@@ -184,9 +187,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         }
         if (!successfulMatch) {
           if (prevSnapshot) {
-            setTimeout(() => {
-              this._snapshot.next(prevSnapshot);
-            }, 0);
+            this._skip.next(true);
+            // setTimeout(() => {
+            this._snapshot.next(prevSnapshot);
+            // }, 0);
           } else {
             const parsedURL = this.parseUrl(this.prevUrl);
             this.router.navigateByUrl(parsedURL);

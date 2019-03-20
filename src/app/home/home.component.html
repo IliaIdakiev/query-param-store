@@ -1,3 +1,7 @@
 <p>
   home works!
 </p>
+<br />
+<a [routerLink]="['/user/list/detail', { outlets: { 'test': ['test2']}}]" [queryParams]="{ best: 1 }">Forbidden</a>
+<br />
+<a [routerLink]="['/user/list/detail', { outlets: { 'test': ['test2']}}]" [queryParams]="{ best: 'best' }">Allowed</a>
