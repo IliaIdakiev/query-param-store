@@ -5,7 +5,7 @@ import { QueryParamsStore } from 'query-params-store';
 import { tap, first } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
-export class DetailResolver implements Resolve<Observable<boolean>> {
+export class DetailResolver implements Resolve<Observable<any>> {
 
   constructor(
     private queryParamsStore: QueryParamsStore

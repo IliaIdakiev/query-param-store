@@ -38,3 +38,10 @@ export interface IQueryParamsStoreRoute<T = any> extends Route {
 }
 
 export type IQueryParamStoreRoutes<T = any> = IQueryParamsStoreRoute<T>[];
+
+export interface IAllowedValuesConfig {
+  [paramName: string]: {
+    match: string | number | (string | number)[],
+    default?: string | number
+  };
+}

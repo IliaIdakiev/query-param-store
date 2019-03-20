@@ -5,6 +5,11 @@
   <nav>
     <a [routerLink]="['.', { outlets: { 'test': ['test']}}]">Test</a>
     <a [routerLink]="['.', { outlets: { 'test': ['test2']}}]">Test 2</a>
+    <br />
+    <a [routerLink]="['.', { outlets: { 'test': ['test2']}}]" [queryParams]="{ best: 1 }">Forbidden test2?best=1</a>
+    <br />
+    <a [routerLink]="['.', { outlets: { 'test': ['test2']}}]" [queryParams]="{ best: 'best' }">Allowed
+      test2?best=best</a>
   </nav>
 </div>
 <router-outlet name="test"></router-outlet>
