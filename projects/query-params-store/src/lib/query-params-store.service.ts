@@ -188,9 +188,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         if (!successfulMatch) {
           if (prevSnapshot) {
             this._skip.next(true);
-            // setTimeout(() => {
             this._snapshot.next(prevSnapshot);
-            // }, 0);
           } else {
             const parsedURL = this.parseUrl(this.prevUrl);
             this.router.navigateByUrl(parsedURL);
