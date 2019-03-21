@@ -12,8 +12,7 @@ export class DetailActivate implements CanActivate {
   ) { }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-    return this.queryParamsStore.match({ best: { match: [null, 'best'] } }).pipe(
-      first(),
+    return this.queryParamsStore.canActivate({ best: { match: [null, 'best'] } }).pipe(
       tap(result => console.log('match', result))
     );
   }

@@ -112,19 +112,52 @@ export class ListActivate implements CanActivate {
     //         value: null,
     //         multi: false,
     //         typeConvertor: String
-    //       },
+    //       }
     //     }
-    //   },
+    //   }
     // },
     // this guard will allow the route to be accessed only if the role query param is 'ADMIN' or the defaultValue from
     // the configuration object (null). If we don't have a defaultValue we should add undefined instead of null
-    return this.queryParamsStore.match({ role: { match: [null, 'ADMIN'] } }).pipe(first());
+    return this.queryParamsStore.canActivate({ role: { match: [null, 'ADMIN'] } });
   }
 }
 
 ```
 
-and inside our components:
+protect exiting routes with unwanted query parameters inside canDeactivate
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class DialogDeactivate implements CanDeactivate<Observable<boolean>> {
+
+  constructor(
+    private queryParamsStore: QueryParamsStore
+  ) { }
+
+
+  canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {
+    // if we have this route query params store configuration for the route
+    // data: {
+    //     queryParamsConfig: {
+    //       defaultValues: {
+    //         completed: {
+    //           value: null,
+    //           multi: false,
+    //           typeConvertor: Boolean
+    //         }
+    //       }
+    //     }
+    //   },
+    // this guard will allow the route to be exited only if the completed query param is true or the defaultValue from
+    // the configuration object (null).
+    return this.queryParamsStore.canDeactivate({ completed: { match: [null, true] } }, currentState);
+  }
+}
+```
+
+* There is an additional **queryParamsStore.match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>)** method that can be used.
+
+Using query params store inside our components:
 
 list.component.ts
 ```typescript

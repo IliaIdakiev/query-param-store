@@ -1,5 +1,15 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Router, NavigationStart, ActivationEnd, ActivatedRouteSnapshot, RoutesRecognized, DefaultUrlSerializer } from '@angular/router';
+import {
+  Router,
+  NavigationStart,
+  ActivationEnd,
+  ActivatedRouteSnapshot,
+  RoutesRecognized,
+  DefaultUrlSerializer,
+  NavigationEnd,
+  RouterStateSnapshot,
+  NavigationCancel
+} from '@angular/router';
 import { ReplaySubject, Subscription, Observable, of as observableOf, Subject, BehaviorSubject } from 'rxjs';
 import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, switchMap, pairwise } from 'rxjs/operators';
 import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
@@ -14,7 +24,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
   private _skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   url: string;
-  prevUrl: string;
+  fullUrl: string;
+  prevFullUrl: string;
   subscription: Subscription;
   currentGuards: [] = [];
 
@@ -50,7 +61,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
         const keyTypeConverter = supportedKeys.reduce((acc, key) => {
           const defaultValue = allDefaultValues[key];
-          acc[key] = defaultValue.typeConvertor || (typeof defaultValue === 'number' ? Number : String);
+          acc[key] = defaultValue.typeConvertor ||
+            (typeof defaultValue === 'number' ? Number : typeof defaultValue === 'boolean' ? Boolean : String);
           return acc;
         }, {});
 
@@ -73,10 +85,12 @@ export class QueryParamsStore<T = any> implements OnDestroy {
             (keyConfig && keyConfig.multi ?
               decodedValue.split(keyConfig.separator || ';') : [decodedValue]).forEach(currentDecodedValue => {
                 const converter = keyTypeConverter[key] || String;
-                const newValue = converter(currentDecodedValue);
+                const isBoolean = ['true', 'false'].includes(currentDecodedValue) && converter === Boolean;
+                const newValue = converter(isBoolean ? currentDecodedValue === 'true' ? 1 : 0 : currentDecodedValue);
                 const isValidNumber = converter === Number && !Number.isNaN(newValue);
                 const isValidString = converter === String && typeof newValue === 'string';
-                if (isValidNumber || isValidString) {
+                const isValidBoolean = converter === Boolean && typeof newValue === 'boolean';
+                if (isValidNumber || isValidString || isValidBoolean) {
                   if (keyConfig && keyConfig.multi) {
                     acc[key] = (acc[key] || []).concat(newValue);
                   } else {
@@ -132,10 +146,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       filter(event => !(event instanceof ActivationEnd)),
       tap(event => {
         if (event instanceof NavigationStart) {
-          this.prevUrl = this.url || '';
+          this.prevFullUrl = this.fullUrl || '';
+          this.fullUrl = event.url;
           this.url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
         } else if (event instanceof RoutesRecognized) {
           this.url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
+        } else if (event instanceof NavigationCancel) {
+          this.fullUrl = this.prevFullUrl;
         }
       }),
       filter(event => {
@@ -164,8 +181,15 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     return this.store.pipe(map(fn));
   }
 
-  match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>): Observable<boolean> {
+  private _match(
+    allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
+    navigateTo?: string,
+    isDeactivate = false
+  ): Observable<boolean> {
     if (!(allowedValues instanceof Observable)) { allowedValues = observableOf(allowedValues); }
+    if (navigateTo === this.fullUrl) {
+      throw new Error('Navigating to the same route will result into infinite loop!');
+    }
     return this.store.pipe(
       withLatestFrom(this._skip, allowedValues, this._snapshot.pipe(pairwise())),
       tap(([, shouldSkip]) => { if (shouldSkip) { this._skip.next(false); } }),
@@ -183,18 +207,32 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           }
           successfulMatch = successfulMatch && isCurrentMatch;
         }
-        if (!successfulMatch) {
-          if (prevSnapshot) {
-            this._skip.next(true);
-            this._snapshot.next(prevSnapshot);
+        if (!successfulMatch && typeof navigateTo === 'string') {
+          if (navigateTo === this.prevFullUrl && prevSnapshot) {
+            if (!isDeactivate) {
+              this._skip.next(true);
+              this._snapshot.next(prevSnapshot);
+            }
           } else {
-            const parsedURL = this.parseUrl(this.prevUrl);
+            const parsedURL = this.parseUrl(navigateTo);
             this.router.navigateByUrl(parsedURL);
           }
         }
         return successfulMatch;
       }),
     );
+  }
+
+  match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
+    return this._match(allowedValues);
+  }
+
+  canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
+    return this._match(allowedValues, this.prevFullUrl).pipe(first());
+  }
+
+  canDeactivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: RouterStateSnapshot) {
+    return this._match(allowedValues, currentSnapshot.url, true).pipe(first());
   }
 
   ngOnDestroy() {

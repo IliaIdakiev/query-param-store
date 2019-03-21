@@ -13,19 +13,15 @@ export interface IQueryParamsStoreData<T = any> {
   [key: string]: any;
 }
 
-export interface IQueryParamStoreRestrictor {
-  check(queryParamName: string, queryParamValue: QueryParamsStoreDefaultValue): Observable<boolean> | Promise<boolean> | boolean;
-}
-
 export type QueryParamsStoreDefaultValue = QueryParamsStoreDefaultGenericValue | QueryParamsStoreDefaultMultiValue;
 
-export type QueryParamsStoreDefaultGenericValue = string | number | {
-  value: null | undefined | string | number,
-  typeConvertor: StringConstructor | NumberConstructor;
+export type QueryParamsStoreDefaultGenericValue = string | number | boolean | {
+  value: null | undefined | string | number | boolean,
+  typeConvertor: StringConstructor | NumberConstructor | BooleanConstructor
   multi: false;
 };
 
-export type QueryParamsStoreDefaultMultiValue = string | number | {
+export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
   value: string,
   multi: true,
   typeConvertor: StringConstructor | NumberConstructor;
@@ -41,7 +37,7 @@ export type IQueryParamStoreRoutes<T = any> = IQueryParamsStoreRoute<T>[];
 
 export interface IAllowedValuesConfig {
   [paramName: string]: {
-    match: string | number | (string | number)[],
-    default?: string | number
+    match: string | number | boolean | (string | number | boolean)[],
+    default?: string | number | boolean
   };
 }

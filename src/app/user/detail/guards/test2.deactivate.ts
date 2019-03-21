@@ -12,8 +12,8 @@ export class Test2Deactivate implements CanDeactivate<Observable<boolean>> {
   ) { }
 
   canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {
-    return this.queryParamsStore.store.pipe(tap((data) => {
-      console.log('test 2 deactivate', data);
-    }), first(), mapTo(true));
+    return this.queryParamsStore.canDeactivate({ completed: { match: [null, true] } }, currentState).pipe(
+      tap(result => console.log('match', result))
+    );
   }
 }

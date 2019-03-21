@@ -66,7 +66,12 @@ const routes: IQueryParamStoreRoutes = [
       data: {
         queryParamsConfig: {
           defaultValues: {
-            test2: 'test2'
+            test2: 'test2',
+            completed: {
+              value: null,
+              multi: false,
+              typeConvertor: Boolean
+            }
           },
           removeUnknown: true
         },
