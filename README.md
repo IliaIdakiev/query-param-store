@@ -23,7 +23,7 @@ const listRoute: IQueryParamsStoreRoute = {
         filter: {
           value: null, // the default value of the query parameter filter will be null
           typeConvertor: String, // if a value inside the URL is provided it will be automatically parsed as String 
-          // (possible values for typeConvertor - String | Number)
+          // (possible values for typeConvertor - String | Number | Boolean)
           multi: false // it will be a single value (not an array)
         },
         sort: {
