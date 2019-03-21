@@ -34,7 +34,7 @@ const listRoute: IQueryParamsStoreRoute = {
           // ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and 
           // at the end we will recevice an array - ['name:asc', 'email:asc', 'age:desc'];
           typeConvertor: String, // the convertor will be used on each value from the split array 
-          // (possible values for typeConvertor - String | Number)
+          // (possible values for typeConvertor - String | Number | Boolean)
         }
       },
       removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property 
