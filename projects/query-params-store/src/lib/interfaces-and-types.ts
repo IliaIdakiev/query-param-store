@@ -19,6 +19,7 @@ export type QueryParamsStoreDefaultGenericValue = string | number | boolean | {
   value: null | undefined | string | number | boolean,
   typeConvertor: StringConstructor | NumberConstructor | BooleanConstructor
   multi: false;
+  allowedValues?: (null | undefined | string | number | boolean)[]
 };
 
 export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
@@ -26,6 +27,7 @@ export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
   multi: true,
   typeConvertor: StringConstructor | NumberConstructor;
   separator: string,
+  allowedValues?: (null | undefined | string | number | boolean)[]
 };
 
 export interface IQueryParamsStoreRoute<T = any> extends Route {

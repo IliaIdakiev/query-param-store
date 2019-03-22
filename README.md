@@ -18,11 +18,17 @@ const listRoute: IQueryParamsStoreRoute = {
   data: {
     queryParamsConfig: {
       defaultValues: {
-        page: 0, // the query parameter - page will be of type number with default value of 0
-        pageSize: '30', // the query parameter - pageSize will be of type string with default value of '30'
+        page: 0, // the query parameter - page will be of type number with default value of 0 (type number)
+        pageSize: { 
+          value: '30' // the query parameter - pageSize will be of type string with default value of '30' (type string)
+          allowedValues: ['30', '20', '10'] // (optional) the full set of allowed values for the current query param
+          // if the provided value doesn't match any of the listed once it will be removed and the default one
+          // will be provided
+        }, 
         filter: {
           value: null, // the default value of the query parameter filter will be null
           typeConvertor: String, // if a value inside the URL is provided it will be automatically parsed as String 
+          // If parsing is not successful the query parameter will be removed.
           // (possible values for typeConvertor - String | Number | Boolean)
           multi: false // it will be a single value (not an array)
         },

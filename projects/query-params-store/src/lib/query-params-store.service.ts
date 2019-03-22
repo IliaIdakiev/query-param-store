@@ -82,19 +82,21 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
             const keyConfig = allDefaultValues[key];
+            const keyAllowedValues = keyConfig.allowedValues;
             (keyConfig && keyConfig.multi ?
               decodedValue.split(keyConfig.separator || ';') : [decodedValue]).forEach(currentDecodedValue => {
                 const converter = keyTypeConverter[key] || String;
                 const isBoolean = ['true', 'false'].includes(currentDecodedValue) && converter === Boolean;
-                const newValue = converter(isBoolean ? currentDecodedValue === 'true' ? 1 : 0 : currentDecodedValue);
-                const isValidNumber = converter === Number && !Number.isNaN(newValue);
-                const isValidString = converter === String && typeof newValue === 'string';
-                const isValidBoolean = converter === Boolean && typeof newValue === 'boolean';
-                if (isValidNumber || isValidString || isValidBoolean) {
+                const convertedValue = converter(isBoolean ? currentDecodedValue === 'true' ? 1 : 0 : currentDecodedValue);
+                const isValidNumber = converter === Number && !Number.isNaN(convertedValue);
+                const isValidString = converter === String && typeof convertedValue === 'string';
+                const isValidBoolean = converter === Boolean && typeof convertedValue === 'boolean';
+                if ((isValidNumber || isValidString || isValidBoolean) &&
+                  (!keyAllowedValues || keyAllowedValues.includes(convertedValue))) {
                   if (keyConfig && keyConfig.multi) {
-                    acc[key] = (acc[key] || []).concat(newValue);
+                    acc[key] = (acc[key] || []).concat(convertedValue);
                   } else {
-                    acc[key] = newValue;
+                    acc[key] = convertedValue;
                   }
                 } else {
                   acc[key] = flatDefaultValues[key];
@@ -112,6 +114,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           }
           return acc;
         }, {});
+
         result.queryParams = queryParams;
 
         const errorKeys = Object.keys(result.errors);
