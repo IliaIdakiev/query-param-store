@@ -174,8 +174,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }),
       filter(val => !!val),
       distinctUntilChanged()
-    ).subscribe((snapshot) => {
-      this._snapshot.next(snapshot);
+    ).subscribe({
+      next: val => this._snapshot.next(val),
+      error: err => this._snapshot.error(err),
+      complete: () => this._snapshot.complete()
     });
   }
 
