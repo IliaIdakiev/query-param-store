@@ -22,13 +22,12 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
   private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
   private _skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  url: string;
-  fullUrl: string;
-  prevFullUrl: string;
-  subscription: Subscription;
-  currentGuards: [] = [];
+  private _subscription: Subscription;
+  private _url: string;
+  private _fullUrl: string;
+  private _prevFullUrl: string;
 
-  parseUrl(url: string) {
+  private _parseUrl(url: string) {
     return new DefaultUrlSerializer().parse(url);
   }
 
@@ -41,7 +40,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          const parsedURL = this.parseUrl(this.url);
+          const parsedURL = this._parseUrl(this._url);
           this.router.navigateByUrl(parsedURL, {
             queryParams: {}
           });
@@ -123,7 +122,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         }, {});
 
         if (errorKeys.length !== 0) {
-          const parsedURL = this.parseUrl(this.url);
+          const parsedURL = this._parseUrl(this._url);
           this.router.navigateByUrl(parsedURL, {
             queryParams: { ...result.queryParams, ...queryParamsCleanup },
             queryParamsHandling: 'merge'
@@ -138,23 +137,23 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   constructor(public router: Router) {
-    this.constructHandler();
+    this._constructHandler();
     this._snapshot.next(null);
   }
 
-  private constructHandler() {
-    if (this.subscription) { return; }
-    this.subscription = this.router.events.pipe(
+  private _constructHandler() {
+    if (this._subscription) { return; }
+    this._subscription = this.router.events.pipe(
       filter(event => !(event instanceof ActivationEnd)),
       tap(event => {
         if (event instanceof NavigationStart) {
-          this.prevFullUrl = this.fullUrl || '';
-          this.fullUrl = event.url;
-          this.url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
+          this._prevFullUrl = this._fullUrl || '';
+          this._fullUrl = event.url;
+          this._url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
         } else if (event instanceof RoutesRecognized) {
-          this.url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
+          this._url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
         } else if (event instanceof NavigationCancel) {
-          this.fullUrl = this.prevFullUrl;
+          this._fullUrl = this._prevFullUrl;
         }
       }),
       filter(event => {
@@ -165,8 +164,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         let currSnapshot = (event as any).snapshot;
         while (currSnapshot && currSnapshot.children.length !== 0) {
           currSnapshot = currSnapshot.children.find(childSnapshot => {
-            return this.url === '/' && childSnapshot.url.length === 0
-              || !!childSnapshot.url.find(segment => this.url.includes(segment.path));
+            return this._url === '/' && childSnapshot.url.length === 0
+              || !!childSnapshot.url.find(segment => this._url.includes(segment.path));
           });
         }
         return currSnapshot;
@@ -191,7 +190,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     isDeactivate = false
   ): Observable<boolean> {
     if (!(allowedValues instanceof Observable)) { allowedValues = observableOf(allowedValues); }
-    if (navigateTo === this.fullUrl) {
+    if (navigateTo === this._fullUrl) {
       throw new Error('Navigating to the same route will result into infinite loop!');
     }
     return this.store.pipe(
@@ -212,13 +211,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           successfulMatch = successfulMatch && isCurrentMatch;
         }
         if (!successfulMatch && typeof navigateTo === 'string') {
-          if (navigateTo === this.prevFullUrl && prevSnapshot) {
+          if (navigateTo === this._prevFullUrl && prevSnapshot) {
             if (!isDeactivate) {
               this._skip.next(true);
               this._snapshot.next(prevSnapshot);
             }
           } else {
-            const parsedURL = this.parseUrl(navigateTo);
+            const parsedURL = this._parseUrl(navigateTo);
             this.router.navigateByUrl(parsedURL);
           }
         }
@@ -232,7 +231,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-    return this._match(allowedValues, this.prevFullUrl).pipe(first());
+    return this._match(allowedValues, this._prevFullUrl).pipe(first());
   }
 
   canDeactivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: RouterStateSnapshot) {
@@ -240,6 +239,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe();
+    this._subscription.unsubscribe();
   }
 }
