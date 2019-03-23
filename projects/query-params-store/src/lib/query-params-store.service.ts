@@ -6,12 +6,11 @@ import {
   ActivatedRouteSnapshot,
   RoutesRecognized,
   DefaultUrlSerializer,
-  NavigationEnd,
   RouterStateSnapshot,
   NavigationCancel
 } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, Subject, BehaviorSubject } from 'rxjs';
-import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, switchMap, pairwise } from 'rxjs/operators';
+import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
+import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, pairwise } from 'rxjs/operators';
 import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
 
 type SelectorFn<T> = (any) => T;
