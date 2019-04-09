@@ -10,7 +10,7 @@ import {
   NavigationCancel
 } from '@angular/router';
 import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
-import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, pairwise } from 'rxjs/operators';
+import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, pairwise, startWith } from 'rxjs/operators';
 import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
 
 type SelectorFn<T> = (any) => T;
@@ -31,9 +31,18 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     return new DefaultUrlSerializer().parse(url);
   }
 
-  get store(): Observable<T> {
-    return this._snapshot.pipe(
-      skip(1),
+  get store() {
+    return this.getStore();
+  }
+
+  get prevStore() {
+    return this.getStore(true);
+  }
+
+  private getStore(previous = false): Observable<T> {
+    const stream$ = this._snapshot.pipe(
+      pairwise(),
+      map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !!val),
       map(snapshot => {
         const data: IQueryParamsStoreData = snapshot.data ||
@@ -132,8 +141,11 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
         return Object.assign({}, flatDefaultValues, result.queryParams);
       }),
-      filter(val => !!val)
     );
+    if (previous) {
+      return stream$.pipe(startWith(null));
+    }
+    return stream$;
   }
 
   constructor(public router: Router) {
@@ -181,7 +193,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
   select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
     const fn = typeof selector === 'string' ? state => state[selector] : selector;
-    return this.store.pipe(map(fn));
+    return this.getStore().pipe(map(fn));
   }
 
   private _match(
@@ -193,7 +205,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     if (navigateTo === this._fullUrl) {
       throw new Error('Navigating to the same route will result into infinite loop!');
     }
-    return this.store.pipe(
+    return this.getStore().pipe(
       withLatestFrom(this._skip, allowedValues, this._snapshot.pipe(pairwise())),
       tap(([, shouldSkip]) => { if (shouldSkip) { this._skip.next(false); } }),
       filter(([, shouldSkip]) => !shouldSkip),
