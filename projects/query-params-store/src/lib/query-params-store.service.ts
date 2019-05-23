@@ -89,7 +89,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
             const keyConfig = allDefaultValues[key];
-            const keyAllowedValues = keyConfig.allowedValues;
             (keyConfig && keyConfig.multi ?
               decodedValue.split(keyConfig.separator || ';') : [decodedValue]).forEach(currentDecodedValue => {
                 const converter = keyTypeConverter[key] || String;
@@ -99,7 +98,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                 const isValidString = converter === String && typeof convertedValue === 'string';
                 const isValidBoolean = converter === Boolean && typeof convertedValue === 'boolean';
                 if ((isValidNumber || isValidString || isValidBoolean) &&
-                  (!keyAllowedValues || keyAllowedValues.includes(convertedValue))) {
+                  (!keyConfig.allowedValues || keyConfig.allowedValues.includes(convertedValue))) {
                   if (keyConfig && keyConfig.multi) {
                     acc[key] = (acc[key] || []).concat(convertedValue);
                   } else {
