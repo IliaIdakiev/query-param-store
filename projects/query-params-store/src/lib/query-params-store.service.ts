@@ -5,12 +5,11 @@ import {
   ActivationEnd,
   ActivatedRouteSnapshot,
   RoutesRecognized,
-  DefaultUrlSerializer,
   RouterStateSnapshot,
   NavigationCancel
 } from '@angular/router';
 import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
-import { map, filter, tap, distinctUntilChanged, withLatestFrom, skip, first, pairwise, startWith } from 'rxjs/operators';
+import { map, filter, tap, distinctUntilChanged, withLatestFrom, first, pairwise, startWith } from 'rxjs/operators';
 import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
 
 type SelectorFn<T> = (any) => T;
@@ -26,10 +25,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   private _url: string;
   private _fullUrl: string;
   private _prevFullUrl: string;
-
-  private _parseUrl(url: string) {
-    return new DefaultUrlSerializer().parse(url);
-  }
 
   get store() {
     return this.getStore();
@@ -49,8 +44,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          const parsedURL = this._parseUrl(this._url);
-          this.router.navigateByUrl(parsedURL, {
+          this.router.navigateByUrl(this._url, {
             queryParams: {}
           });
           return null;
@@ -108,7 +102,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                   acc[key] = flatDefaultValues[key];
                   result.errors = {
                     ...result.errors,
-                    [key]: `Invalid ${!isValidNumber ? 'number' : 'string'}`
+                    [key]: `Invalid value`
                   };
                 }
               });
@@ -130,17 +124,17 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         }, {});
 
         if (errorKeys.length !== 0) {
-          const parsedURL = this._parseUrl(this._url);
-          this.router.navigateByUrl(parsedURL, {
-            queryParams: { ...result.queryParams, ...queryParamsCleanup },
-            queryParamsHandling: 'merge'
-          });
+          // router.navigateByUrl(url, extras) skips the { queryParams } that are provided inside the extras
+          // https://github.com/angular/angular/issues/22668
+          const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
+            .reduce((arr, [currKey, currValue]) => currValue ? arr.concat(`${currKey}=${currValue}`) : arr, []);
+          this.router.navigateByUrl(`${this._url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`);
           return;
         }
 
         return Object.assign({}, flatDefaultValues, result.queryParams);
       }),
-    );
+    ).pipe(filter(val => val !== undefined));
     if (previous) {
       return stream$.pipe(startWith(null));
     }
@@ -228,8 +222,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
               this._snapshot.next(prevSnapshot);
             }
           } else {
-            const parsedURL = this._parseUrl(navigateTo);
-            this.router.navigateByUrl(parsedURL);
+            this.router.navigateByUrl(navigateTo);
           }
         }
         return successfulMatch;
