@@ -46,9 +46,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          this.router.navigateByUrl(this._url, {
-            queryParams: {}
-          });
+          this.router.navigateByUrl(this._url);
           return null;
         }
 
