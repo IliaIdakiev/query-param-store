@@ -70,7 +70,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         const flatDefaultValues = supportedKeys.reduce((acc, key) => {
           const currentValue = allDefaultValues[key];
           acc[key] = currentValue.value !== undefined ?
-            currentValue.multi && currentValue.value !== null ? `${currentValue.value}`
+            currentValue.multi && currentValue.value !== null ? currentValue.value === '' ? [] : `${currentValue.value}`
               .split(currentValue.separator || ';').map(val => (currentValue.typeConvertor || String)(val)) :
               currentValue.value : currentValue;
           return acc;
