@@ -6,7 +6,8 @@ import {
   ActivatedRouteSnapshot,
   RoutesRecognized,
   RouterStateSnapshot,
-  NavigationCancel
+  NavigationCancel,
+  NavigationEnd
 } from '@angular/router';
 import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
 import { map, filter, tap, distinctUntilChanged, withLatestFrom, first, pairwise, startWith } from 'rxjs/operators';
@@ -25,6 +26,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   private _url: string;
   private _fullUrl: string;
   private _prevFullUrl: string;
+  private _redirectUrl: string;
 
   get store() {
     return this.getStore();
@@ -126,12 +128,17 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         if (errorKeys.length !== 0) {
           // router.navigateByUrl(url, extras) skips the { queryParams } that are provided inside the extras
           // https://github.com/angular/angular/issues/22668
-          const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
-            .reduce((arr, [currKey, currValue]) => currValue ? arr.concat(`${currKey}=${currValue}`) : arr, []);
-          this.router.navigateByUrl(`${this._url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`);
+          if (!this._redirectUrl) {
+            // TODO: extract this to a tap
+            const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
+              .reduce((arr, [currKey, currValue]) => currValue ? arr.concat(`${currKey}=${currValue}`) : arr, []);
+            const redirectUrl = `${this._url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;
+            this.router.navigateByUrl(redirectUrl);
+            this._redirectUrl = redirectUrl;
+          }
           return;
         }
-
+        console.log(snapshot);
         return Object.assign({}, flatDefaultValues, result.queryParams);
       }),
     ).pipe(filter(val => val !== undefined));
@@ -159,6 +166,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           this._url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
         } else if (event instanceof NavigationCancel) {
           this._fullUrl = this._prevFullUrl;
+        } else if (event instanceof NavigationEnd) {
+          this._redirectUrl = null;
         }
       }),
       filter(event => {
