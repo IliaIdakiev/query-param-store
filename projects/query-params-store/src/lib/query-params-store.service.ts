@@ -92,7 +92,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                 const isValidString = converter === String && typeof convertedValue === 'string';
                 const isValidBoolean = converter === Boolean && typeof convertedValue === 'boolean';
                 if ((isValidNumber || isValidString || isValidBoolean) &&
-                  (!keyConfig.allowedValues || keyConfig.allowedValues.includes(convertedValue))) {
+                  (!keyConfig || !keyConfig.allowedValues || keyConfig.allowedValues.includes(convertedValue))) {
                   if (keyConfig && keyConfig.multi) {
                     acc[key] = (acc[key] || []).concat(convertedValue);
                   } else {
