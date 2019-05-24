@@ -1,6 +1,6 @@
 {
   "name": "query-params-store",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "peerDependencies": {
     "@angular/common": "^7.1.0",
     "@angular/core": "^7.1.0"
