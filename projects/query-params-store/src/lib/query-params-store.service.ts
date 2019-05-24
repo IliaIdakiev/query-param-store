@@ -177,11 +177,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }),
       filter(val => !!val),
       distinctUntilChanged()
-    ).subscribe({
-      next: val => this._snapshot.next(val),
-      error: err => this._snapshot.error(err),
-      complete: () => this._snapshot.complete()
-    });
+    ).subscribe(this._snapshot);
   }
 
   select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
