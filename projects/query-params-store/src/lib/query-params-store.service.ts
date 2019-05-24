@@ -136,7 +136,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           }
           return;
         }
-        console.log(snapshot);
         return Object.assign({}, flatDefaultValues, result.queryParams);
       }),
     ).pipe(filter(val => val !== undefined));
