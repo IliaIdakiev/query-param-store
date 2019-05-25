@@ -58,20 +58,27 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           return { ...acc, ...(currData.queryParamsConfig.defaultValues || {}) };
         }, defaultValues) : defaultValues;
 
-        const supportedKeys = Object.keys(allDefaultValues);
+        let supportedKeys = Object.keys(allDefaultValues);
 
         const keyTypeConverter = supportedKeys.reduce((acc, key) => {
           const defaultValue = allDefaultValues[key];
+          if (defaultValue === null || defaultValue === undefined) {
+            console.warn(`Query Params Store > Invalid value '${defaultValue}' for key '${key}'`);
+            return acc;
+          }
           acc[key] = defaultValue.typeConvertor ||
             (typeof defaultValue === 'number' ? Number : typeof defaultValue === 'boolean' ? Boolean : String);
           return acc;
         }, {});
 
+        supportedKeys = Object.keys(keyTypeConverter);
+
         const flatDefaultValues = supportedKeys.reduce((acc, key) => {
           const currentValue = allDefaultValues[key];
-          acc[key] = currentValue.value !== undefined ?
-            currentValue.multi && currentValue.value !== null ? currentValue.value === '' ? [] : `${currentValue.value}`
-              .split(currentValue.separator || ';').map(val => (currentValue.typeConvertor || String)(val)) :
+          acc[key] = typeof currentValue === 'object' ?
+            currentValue.multi && currentValue.value !== null ?
+              (currentValue.value === '' || currentValue.value === undefined) ? [] : `${currentValue.value}`
+                .split(currentValue.separator || ';').map(val => (currentValue.typeConvertor || String)(val)) :
               currentValue.value : currentValue;
           return acc;
         }, {});
