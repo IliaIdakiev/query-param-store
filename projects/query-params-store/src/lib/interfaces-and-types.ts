@@ -6,7 +6,7 @@ export interface IQueryParamsStoreData<T = any> {
     noQueryParams?: boolean;
     removeUnknown?: boolean;
     inherit?: boolean;
-    defaultValues: {
+    defaultValues?: {
       [k in keyof T]: QueryParamsStoreDefaultValue;
     };
   };
@@ -32,6 +32,7 @@ export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
 
 export interface IQueryParamsStoreRoute<T = any> extends Route {
   data?: IQueryParamsStoreData<T>;
+  children?: IQueryParamStoreRoutes;
   [key: string]: any;
 }
 
