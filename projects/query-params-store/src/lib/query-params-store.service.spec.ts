@@ -16,7 +16,7 @@ describe('QueryParamsStore', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('initial navigation', () => {
+  describe('simple navigation', () => {
     let router: Router;
 
     beforeEach(() => {
@@ -171,7 +171,7 @@ describe('QueryParamsStore', () => {
     });
   });
 
-  describe('initial with remove unknown param option', () => {
+  describe('simple navigation with remove unknown param option', () => {
     let router: Router;
 
     beforeEach(() => {
@@ -205,6 +205,79 @@ describe('QueryParamsStore', () => {
         router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
       ).subscribe(([state, e]) => {
         expect(e.url).toEqual('/?pageSize=10');
+        expect(state.pageSize).toEqual(10);
+        expect(state.best).toEqual(undefined);
+        done();
+      });
+
+    });
+  });
+
+  describe('nested routes', () => {
+    let router: Router;
+
+    const setConfig = (childRemoveUnknown = false) => {
+      class TestComponent { }
+      router = TestBed.get(Router);
+      const configs: IQueryParamStoreRoutes = [{
+        path: 'parent',
+        component: TestComponent,
+        data: {
+          queryParamsConfig: {
+            defaultValues: {
+              pageSize: 30, // number default config
+            },
+            removeUnknown: true
+          }
+        },
+        children: [{
+          path: 'child',
+          component: TestComponent,
+          data: {
+            queryParamsConfig: {
+              inherit: true,
+              removeUnknown: childRemoveUnknown
+            }
+          },
+        }]
+      }];
+
+      router.resetConfig(configs);
+    };
+
+    it('should inherit parent params', (done) => {
+      setConfig();
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      const ngZone: NgZone = TestBed.get(NgZone);
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/parent/child?pageSize=10&best=test'); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/parent/child?pageSize=10&best=test');
+        expect(state.pageSize).toEqual(10);
+        expect(state.best).toEqual('test');
+        done();
+      });
+
+    });
+
+    it('should inherit parent params and remove unknown', (done) => {
+      setConfig(true);
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      const ngZone: NgZone = TestBed.get(NgZone);
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/parent/child?pageSize=10&best=test'); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/parent/child?pageSize=10');
         expect(state.pageSize).toEqual(10);
         expect(state.best).toEqual(undefined);
         done();
