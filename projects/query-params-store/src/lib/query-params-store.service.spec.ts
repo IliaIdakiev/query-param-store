@@ -2,9 +2,11 @@ import { TestBed } from '@angular/core/testing';
 
 import { QueryParamsStore } from './query-params-store.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { IQueryParamStoreRoutes } from './interfaces-and-types';
 import { NgZone } from '@angular/core';
+import { zip } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 describe('QueryParamsStore', () => {
   beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule] }));
@@ -131,6 +133,83 @@ describe('QueryParamsStore', () => {
         expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual(['1', '2', '3']);
         done();
       });
+    });
+
+    it('should remove invalid query params', (done) => {
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      const ngZone: NgZone = TestBed.get(NgZone);
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test'); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/?filter=test');
+        expect(state.pageSize).toEqual(30);
+        expect(state.filter).toEqual('test');
+        done();
+      });
+    });
+
+    it('should keep unknown query params', (done) => {
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      const ngZone: NgZone = TestBed.get(NgZone);
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/?pageSize=10&best=test'); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/?pageSize=10&best=test');
+        expect(state.pageSize).toEqual(10);
+        expect(state.best).toEqual('test');
+        done();
+      });
+
+    });
+  });
+
+  describe('initial with remove unknown param option', () => {
+    let router: Router;
+
+    beforeEach(() => {
+      class TestComponent { }
+      router = TestBed.get(Router);
+      const configs: IQueryParamStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        data: {
+          queryParamsConfig: {
+            defaultValues: {
+              pageSize: 30, // number default config
+            },
+            removeUnknown: true
+          }
+        }
+      }];
+
+      router.resetConfig(configs);
+    });
+
+    it('should remove unknown query params', (done) => {
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      const ngZone: NgZone = TestBed.get(NgZone);
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/?pageSize=10&best=test'); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/?pageSize=10');
+        expect(state.pageSize).toEqual(10);
+        expect(state.best).toEqual(undefined);
+        done();
+      });
+
     });
   });
 
