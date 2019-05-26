@@ -16,93 +16,87 @@ describe('QueryParamsStore', () => {
     expect(service).toBeTruthy();
   });
 
-
-  describe('simple navigation', () => {
-
-
-    beforeEach(() => {
-      class TestComponent { }
-      const router: Router = TestBed.get(Router);
-      const configs: IQueryParamStoreRoutes = [{
-        path: '',
-        pathMatch: 'full',
-        component: TestComponent,
-        data: {
-          queryParamsConfig: {
-            defaultValues: {
-              pageSize: 30, // number default config
-              filter: '', // string default config
-              stringOrNull: {
-                value: null,
-                typeConvertor: String,
-                multi: false
-              }, // string advanced config
-              numberOrNull: {
-                value: null,
-                typeConvertor: Number,
-                multi: false
-              }, // number advanced config
-              page: {
-                value: '1;2;3',
-                typeConvertor: Number,
-                multi: true,
-                separator: ';'
-              }, // multi number array with separator ';'
-              pageNumbersOrEmptyArrayWithString: {
-                value: '',
-                typeConvertor: Number,
-                multi: true,
-                separator: ';'
-              }, // multi number array or empty array from string
-              pageNumbersOrNull: {
-                value: null,
-                typeConvertor: Number,
-                multi: true,
-                separator: ';'
-              }, // multi number array or empty array from null
-              pageNumbersOrEmptyArrayWithUndefined: {
-                value: undefined,
-                typeConvertor: Number,
-                multi: true,
-                separator: ';'
-              }, // multi number array or empty array from undefined
-              pageStringsOrEmptyArrayWithString: {
-                value: '',
-                typeConvertor: String,
-                multi: true,
-                separator: ';'
-              }, // multi string array or empty array from string
-              pageStringsOrNull: {
-                value: null,
-                typeConvertor: String,
-                multi: true,
-                separator: ';'
-              }, // multi string array or empty array from null
-              pageStringsOrEmptyArrayWithUndefined: {
-                value: undefined,
-                typeConvertor: String,
-                multi: true,
-                separator: ';'
-              }, // multi string array or empty array from undefined
-              allowed: {
-                value: null,
-                multi: false,
-                typeConvertor: String,
-                allowedValues: ['Test', 'Best']
-              }
-            }
-          }
-        }
-      }];
-
-      router.resetConfig(configs);
-    });
-
-    describe('Store tests', () => {
-      let router: Router;
+  describe('Store tests', () => {
+    let router: Router;
+    describe('simple navigation', () => {
 
       beforeEach(() => {
         router = TestBed.get(Router);
+
+        class TestComponent { }
+        const configs: IQueryParamStoreRoutes = [{
+          path: '',
+          pathMatch: 'full',
+          component: TestComponent,
+          data: {
+            queryParamsConfig: {
+              defaultValues: {
+                pageSize: 30, // number default config
+                filter: '', // string default config
+                stringOrNull: {
+                  value: null,
+                  typeConvertor: String,
+                  multi: false
+                }, // string advanced config
+                numberOrNull: {
+                  value: null,
+                  typeConvertor: Number,
+                  multi: false
+                }, // number advanced config
+                page: {
+                  value: '1;2;3',
+                  typeConvertor: Number,
+                  multi: true,
+                  separator: ';'
+                }, // multi number array with separator ';'
+                pageNumbersOrEmptyArrayWithString: {
+                  value: '',
+                  typeConvertor: Number,
+                  multi: true,
+                  separator: ';'
+                }, // multi number array or empty array from string
+                pageNumbersOrNull: {
+                  value: null,
+                  typeConvertor: Number,
+                  multi: true,
+                  separator: ';'
+                }, // multi number array or empty array from null
+                pageNumbersOrEmptyArrayWithUndefined: {
+                  value: undefined,
+                  typeConvertor: Number,
+                  multi: true,
+                  separator: ';'
+                }, // multi number array or empty array from undefined
+                pageStringsOrEmptyArrayWithString: {
+                  value: '',
+                  typeConvertor: String,
+                  multi: true,
+                  separator: ';'
+                }, // multi string array or empty array from string
+                pageStringsOrNull: {
+                  value: null,
+                  typeConvertor: String,
+                  multi: true,
+                  separator: ';'
+                }, // multi string array or empty array from null
+                pageStringsOrEmptyArrayWithUndefined: {
+                  value: undefined,
+                  typeConvertor: String,
+                  multi: true,
+                  separator: ';'
+                }, // multi string array or empty array from undefined
+                allowed: {
+                  value: null,
+                  multi: false,
+                  typeConvertor: String,
+                  allowedValues: ['Test', 'Best']
+                }
+              }
+            }
+          }
+        }];
+
+        router.resetConfig(configs);
       });
 
       it('should return default values for query params', (done) => {
@@ -186,10 +180,10 @@ describe('QueryParamsStore', () => {
         });
 
       });
+
     });
 
     describe('simple navigation with remove unknown param option', () => {
-      let router: Router;
       beforeEach(() => {
         class TestComponent { }
         router = TestBed.get(Router);
@@ -230,8 +224,6 @@ describe('QueryParamsStore', () => {
     });
 
     describe('nested routes', () => {
-      let router: Router;
-
       const setConfig = (data: { childRemoveUnknown?: boolean, childInherit?: boolean } = {}) => {
         class TestComponent { }
         router = TestBed.get(Router);
@@ -326,6 +318,13 @@ describe('QueryParamsStore', () => {
       });
 
     });
+  });
+
+  describe('CanActivate tests', () => {
+
+  });
+
+  describe('CanDeactivate tests', () => {
 
   });
 });
