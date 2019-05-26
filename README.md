@@ -1,9 +1,9 @@
 [![Build Status](https://travis-ci.com/IliaIdakiev/query-param-store.svg?branch=master)](https://travis-ci.com/IliaIdakiev/query-param-store)
 
-# Angular Query Params Store
+# Angular Query Params Store - RxJS Query Params State Management Container for Angular 
 
-Developing applications often requires persisting state and what better way than using the query parameters for that. With this npm module (`yarn add query-params-store` || `npm install query-params-store`) you can easily configure what query params your application route will have, what are the default values (values used when the query param doesn't exist in the URL),
-restrict what query params can be used on the current route and more.
+Developing web applications requires persistent state and what better way to store it than using the query parameters for that. With this npm module (`yarn add query-params-store` || `npm install query-params-store`) you can easily configure what query perameters your application route will have, what are the default values (values used when the query parameter doesn't exist in the URL),
+restrict what query parameters can be used on the current route and more.
 
 ---
 
