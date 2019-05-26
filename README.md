@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/IliaIdakiev/query-param-store.svg?branch=master)](https://travis-ci.com/IliaIdakiev/query-param-store)
+
 # Angular Query Params Store
 
 Developing applications often requires persisting state and what better way than using the query parameters for that. With this npm module (`yarn add query-params-store` || `npm install query-params-store`) you can easily configure what query params your application route will have, what are the default values (values used when the query param doesn't exist in the URL),
