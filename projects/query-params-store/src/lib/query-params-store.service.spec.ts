@@ -2,22 +2,34 @@ import { TestBed } from '@angular/core/testing';
 
 import { QueryParamsStore } from './query-params-store.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Router, NavigationEnd } from '@angular/router';
+import {
+  Router,
+  NavigationEnd,
+  CanActivate,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+  ActivatedRoute,
+  CanDeactivate,
+  ActivationEnd
+} from '@angular/router';
 import { IQueryParamStoreRoutes } from './interfaces-and-types';
 import { NgZone } from '@angular/core';
-import { zip } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { zip, Subject } from 'rxjs';
+import { filter, tap, first, switchMap, startWith, mapTo, map } from 'rxjs/operators';
 
 describe('QueryParamsStore', () => {
-  beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule] }));
+  describe('default', () => {
+    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule] }));
 
-  it('should be created', () => {
-    const service: QueryParamsStore = TestBed.get(QueryParamsStore);
-    expect(service).toBeTruthy();
+    it('should be created', () => {
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      expect(service).toBeTruthy();
+    });
   });
 
   describe('Store tests', () => {
     let router: Router;
+    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule] }));
     describe('simple navigation', () => {
 
       beforeEach(() => {
@@ -321,10 +333,164 @@ describe('QueryParamsStore', () => {
   });
 
   describe('CanActivate tests', () => {
+    let router: Router;
+    let service: QueryParamsStore;
+    let ngZone: NgZone;
+    let output: Subject<boolean>;
+
+    beforeEach(() => {
+      output = new Subject();
+
+      class TestComponent { }
+      class TestCanActivate implements CanActivate {
+        canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+          return service.canActivate({ role: { match: [null, 'ADMIN'] } }).pipe(tap(output));
+        }
+      }
+
+      const configs: IQueryParamStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        canActivate: [TestCanActivate],
+        data: {
+          queryParamsConfig: {
+            defaultValues: {
+              role: {
+                value: null,
+                typeConvertor: String,
+                multi: false
+              }
+            },
+            removeUnknown: true
+          }
+        }
+      }];
+
+      TestBed.configureTestingModule({
+        imports: [RouterTestingModule.withRoutes(configs)],
+        providers: [TestCanActivate]
+      });
+
+      router = TestBed.get(Router);
+      service = TestBed.get(QueryParamsStore);
+      ngZone = TestBed.get(NgZone);
+    });
+
+    it('should successfuly activate without query parameters', (done) => {
+      ngZone.run(() => { router.initialNavigation(); });
+
+      output.pipe(first()).subscribe(result => {
+        expect(result).toEqual(true);
+        done();
+      });
+    });
+
+    it('should successfuly activate with query parameters', (done) => {
+      ngZone.run(() => {
+        router.setUpLocationChangeListener();
+        router.navigateByUrl('/?role=ADMIN');
+      });
+
+      output.pipe(first()).subscribe(result => {
+        expect(result).toEqual(true);
+        done();
+      });
+    });
+
+    it('should not be able to activate with invalid query parameters', (done) => {
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/?role=TEST'); });
+
+      output.pipe(first()).subscribe(result => {
+        const route: ActivatedRoute = TestBed.get(ActivatedRoute);
+        expect(result).toEqual(false);
+        expect(route.snapshot.url).toEqual([]);
+        done();
+      });
+    });
 
   });
 
   describe('CanDeactivate tests', () => {
+    let router: Router;
+    let service: QueryParamsStore;
+    let ngZone: NgZone;
+    let output: Subject<boolean>;
+
+    beforeEach(() => {
+      output = new Subject();
+
+      class TestComponent { }
+      class TestCanDectivate implements CanDeactivate<boolean> {
+        // tslint:disable-next-line:max-line-length
+        canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {
+          return service.canDeactivate({ completed: { match: true } }, currentState).pipe(tap(output));
+        }
+      }
+
+      const configs: IQueryParamStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        canDeactivate: [TestCanDectivate],
+        data: {
+          queryParamsConfig: {
+            defaultValues: {
+              completed: false
+            }
+          }
+        },
+
+      }, {
+        path: 'test',
+        component: TestComponent
+      }];
+
+      TestBed.configureTestingModule({
+        imports: [RouterTestingModule.withRoutes(configs)],
+        providers: [TestCanDectivate]
+      });
+
+      router = TestBed.get(Router);
+      service = TestBed.get(QueryParamsStore);
+      ngZone = TestBed.get(NgZone);
+    });
+
+    it('should successfuly deactivate', (done) => {
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/?completed=true'); });
+
+      const firstEnd$ = router.events.pipe(first<ActivationEnd>(e => e instanceof ActivationEnd));
+
+      firstEnd$.subscribe(() => {
+        ngZone.run(() => { router.navigateByUrl('/test'); });
+      });
+
+      output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result]))))).subscribe(([event, result]) => {
+        expect(result).toEqual(true);
+
+        expect((event as ActivationEnd).snapshot.url[0].path).toEqual('test');
+        done();
+      });
+    });
+
+    it('should not allow to deactivate', (done) => {
+      router.setUpLocationChangeListener();
+      ngZone.run(() => { router.navigateByUrl('/?completed=false'); });
+
+      const firstEnd$ = router.events.pipe(first<ActivationEnd>(e => e instanceof ActivationEnd));
+
+      firstEnd$.subscribe(() => {
+        ngZone.run(() => { router.navigateByUrl('/test'); });
+      });
+
+      output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result]))))).subscribe(([event, result]) => {
+        expect((event as ActivationEnd).snapshot.url).toEqual([]);
+        expect(result).toEqual(false);
+        done();
+      });
+    });
 
   });
 });
