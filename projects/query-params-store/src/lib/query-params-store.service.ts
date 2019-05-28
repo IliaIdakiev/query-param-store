@@ -194,7 +194,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
-    const fn = typeof selector === 'string' ? state => state[selector] : selector;
+    const fn = typeof selector === 'function' ? selector : state => state[selector];
     return this.getStore().pipe(map(fn));
   }
 
