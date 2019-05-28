@@ -204,6 +204,6 @@ list.component.html
 ```
 
 
-Looking for an example app? [Check out this **simple demo**](https://stackblitz.com/github/IliaIdakiev/query-param-store)!
+This repository contains an example app showing how you can use the *query params store*. You can also view it on [**Stackblitz**](https://stackblitz.com/github/IliaIdakiev/query-param-store)!
 
 **The module utilizes tree shakabke providers so Angular 6+ is required.**
