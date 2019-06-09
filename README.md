@@ -200,7 +200,7 @@ export class ListComponent {
   constructor(private queryParamsStore: QueryParamsStore, activatedRoute: ActivatedRoute) {
     this.filter$ = queryParamsStore.select<string>('filter');
     // this.filter$ = queryParamsStore.select<string>(queryParams => queryParams.filter);
-    this.userList = this.activatedRoute.snapshot.data;
+    this.userList = this.activatedRoute.snapshot.data[0];
   }
 }
 
