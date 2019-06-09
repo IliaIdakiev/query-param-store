@@ -38,6 +38,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
   private getStore(previous = false): Observable<T> {
     const stream$ = this._snapshot.pipe(
+      startWith(null),
       pairwise(),
       map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !!val),
