@@ -15,9 +15,7 @@ import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-ty
 
 type SelectorFn<T> = (any) => T;
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class QueryParamsStore<T = any> implements OnDestroy {
 
   private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
@@ -38,7 +36,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
   private getStore(previous = false): Observable<T> {
     const stream$ = this._snapshot.pipe(
-      startWith(null),
       pairwise(),
       map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !!val),
@@ -154,7 +151,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   constructor(public router: Router) {
-    this._constructHandler();
     this._snapshot.next(null);
   }
 

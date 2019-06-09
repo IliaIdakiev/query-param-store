@@ -15,11 +15,12 @@ import {
 import { IQueryParamStoreRoutes } from './interfaces-and-types';
 import { NgZone } from '@angular/core';
 import { zip, Subject } from 'rxjs';
-import { filter, tap, first, switchMap, startWith, mapTo, map } from 'rxjs/operators';
+import { filter, tap, first, switchMap, map } from 'rxjs/operators';
+import { QueryParamsStoreModule } from './query-params-store.module';
 
 describe('QueryParamsStore', () => {
   describe('default', () => {
-    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule] }));
+    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule, QueryParamsStoreModule] }));
 
     it('should be created', () => {
       const service: QueryParamsStore = TestBed.get(QueryParamsStore);
@@ -29,7 +30,7 @@ describe('QueryParamsStore', () => {
 
   describe('Store tests', () => {
     let router: Router;
-    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule] }));
+    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule, QueryParamsStoreModule] }));
     describe('simple navigation', () => {
 
       beforeEach(() => {
@@ -368,7 +369,7 @@ describe('QueryParamsStore', () => {
       }];
 
       TestBed.configureTestingModule({
-        imports: [RouterTestingModule.withRoutes(configs)],
+        imports: [RouterTestingModule.withRoutes(configs), QueryParamsStoreModule],
         providers: [TestCanActivate]
       });
 
@@ -448,7 +449,7 @@ describe('QueryParamsStore', () => {
       }];
 
       TestBed.configureTestingModule({
-        imports: [RouterTestingModule.withRoutes(configs)],
+        imports: [RouterTestingModule.withRoutes(configs), QueryParamsStoreModule],
         providers: [TestCanDectivate]
       });
 
