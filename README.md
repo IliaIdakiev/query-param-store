@@ -8,6 +8,20 @@ restrict what query parameters can be used on the current route and more.
 ---
 
 ## Configuration
+app.module.ts
+```typescript
+@NgModule({
+  declarations: [...],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    QueryParamsStoreModule // <-- Import the Query Params Module to AppModule
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
+
 app-routing.module.ts
 ```typescript
 import { IQueryParamsStoreRoute, IQueryParamStoreRoutes } from 'query-params-store';
@@ -205,5 +219,3 @@ list.component.html
 
 
 This repository contains an example app showing how you can use the *query params store*. You can also view it on [**Stackblitz**](https://stackblitz.com/github/IliaIdakiev/query-param-store)!
-
-**The module utilizes tree shakabke providers so Angular 6+ is required.**
