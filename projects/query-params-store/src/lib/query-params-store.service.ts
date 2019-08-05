@@ -145,7 +145,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }),
     ).pipe(filter(val => val !== undefined));
     if (previous) {
-      return stream$.pipe(startWith(null));
+      return stream$.pipe(startWith(null as string));
     }
     return stream$;
   }
