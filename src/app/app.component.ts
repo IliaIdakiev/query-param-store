@@ -1,6 +1,6 @@
 import { Component, OnDestroy } from '@angular/core';
 import { QueryParamsStore } from 'query-params-store';
-import { Subject, Subscription, Observable } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
