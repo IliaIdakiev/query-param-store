@@ -76,7 +76,9 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           acc[key] = typeof currentValue === 'object' ?
             currentValue.multi && currentValue.value !== null ?
               (currentValue.value === '' || currentValue.value === undefined) ? [] : `${currentValue.value}`
-                .split(currentValue.separator || ';').map(val => (currentValue.typeConvertor || String)(val)) :
+                .split(currentValue.separator || ';').map(val =>
+                  (currentValue.typeConvertor === Boolean && typeof val === 'string') ?
+                    val === 'true' : (currentValue.typeConvertor || String)(val)) :
               currentValue.value : currentValue;
           return acc;
         }, {});
