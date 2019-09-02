@@ -20,7 +20,12 @@ const routes: IQueryParamStoreRoutes = [
       queryParamsConfig: {
         defaultValues: {
           page: 0,
-          pageSize: 30,
+          pageSize: {
+            value: 20,
+            multi: false,
+            typeConvertor: Number,
+            allowedValues: [20, 30, 40]
+          },
           filter: '',
           test: {
             value: null,
