@@ -28,7 +28,14 @@ export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
   typeConvertor: StringConstructor | NumberConstructor | BooleanConstructor;
   separator: string,
   allowedValues?: (null | undefined | string | number | boolean)[]
-};
+} | QueryParamsStoreDefaultMultiBooleanBinaryValue;
+
+export interface QueryParamsStoreDefaultMultiBooleanBinaryValue {
+  value: number;
+  multi: true;
+  typeConvertor: BooleanConstructor;
+  count?: number;
+}
 
 export interface IQueryParamsStoreRoute<T = any> extends Route {
   data?: IQueryParamsStoreData<T>;

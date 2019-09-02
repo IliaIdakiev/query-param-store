@@ -73,13 +73,21 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
         const flatDefaultValues = supportedKeys.reduce((acc, key) => {
           const currentValue = allDefaultValues[key];
-          acc[key] = typeof currentValue === 'object' ?
+          let res = typeof currentValue === 'object' ?
             currentValue.multi && currentValue.value !== null ?
-              (currentValue.value === '' || currentValue.value === undefined) ? [] : `${currentValue.value}`
-                .split(currentValue.separator || ';').map(val =>
+              (currentValue.value === '' || currentValue.value === undefined) ? [] :
+                (
+                  (currentValue.typeConvertor === Boolean && typeof currentValue.value === 'number') ?
+                    currentValue.value.toString(2).split('').map(val => `${val === '1'}`).reverse() :
+                    `${currentValue.value}`.split(currentValue.separator || ';')
+                ).map(val =>
                   (currentValue.typeConvertor === Boolean && typeof val === 'string') ?
                     val === 'true' : (currentValue.typeConvertor || String)(val)) :
               currentValue.value : currentValue;
+          if (typeof currentValue.count === 'number' && res.length < currentValue.count) {
+            res = res.concat(new Array(currentValue.count - res.length).fill(false));
+          }
+          acc[key] = res;
           return acc;
         }, {});
 
@@ -90,8 +98,18 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
             const keyConfig = allDefaultValues[key];
+            const isBinaryBoolean = typeof keyConfig.value === 'number' && keyConfig.typeConvertor === Boolean;
+            let binaryBooleanResult = isBinaryBoolean ?
+              (+decodedValue).toString(2).split('').reverse().map(val => `${val === '1'}`) : null;
+            if (binaryBooleanResult && binaryBooleanResult.length < keyConfig.count) {
+              binaryBooleanResult = binaryBooleanResult.concat(new Array(keyConfig.count - binaryBooleanResult.length).fill('false'));
+            }
             (keyConfig && keyConfig.multi ?
-              decodedValue.split(keyConfig.separator || ';') : [decodedValue]).forEach(currentDecodedValue => {
+              (
+                isBinaryBoolean ?
+                  binaryBooleanResult :
+                  decodedValue.split(keyConfig.separator || ';')
+              ) : [decodedValue]).forEach(currentDecodedValue => {
                 const converter = keyTypeConverter[key] || String;
                 const isBoolean = ['true', 'false'].includes(currentDecodedValue) && converter === Boolean;
                 const convertedValue = converter(isBoolean ? currentDecodedValue === 'true' ? 1 : 0 : currentDecodedValue);
