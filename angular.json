@@ -63,7 +63,12 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "query-param-store:build"
+            "browserTarget": "query-param-store:build",
+            "sourceMap": {
+              "vendor": true,
+              "scripts": true,
+              "styles": true
+            }
           },
           "configurations": {
             "production": {
@@ -155,6 +160,7 @@
           }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "query-param-store"
 }
