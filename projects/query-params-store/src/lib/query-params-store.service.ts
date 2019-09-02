@@ -13,18 +13,18 @@ import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSu
 import { map, filter, tap, distinctUntilChanged, withLatestFrom, first, pairwise, startWith } from 'rxjs/operators';
 import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
 
-type SelectorFn<T> = (any) => T;
+type SelectorFn<T> = (a: any) => T;
 
 @Injectable()
 export class QueryParamsStore<T = any> implements OnDestroy {
 
-  private _snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
-  private _skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private _subscription: Subscription;
-  private _url: string;
-  private _fullUrl: string;
-  private _prevFullUrl: string;
-  private _redirectUrl: string;
+  private snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
+  private skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private subscription: Subscription;
+  private url: string;
+  private fullUrl: string;
+  private prevFullUrl: string;
+  private redirectUrl: string;
 
   get store() {
     return this.getStore();
@@ -35,7 +35,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   private getStore(previous = false): Observable<T> {
-    const stream$ = this._snapshot.pipe(
+    const stream$ = this.snapshot.pipe(
       pairwise(),
       map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !!val),
@@ -44,13 +44,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
 
         if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
-          this.router.navigateByUrl(this._url);
+          this.router.navigateByUrl(this.url);
           return null;
         }
 
         const { defaultValues = {}, noQueryParams = false, removeUnknown = false, inherit = true } = data.queryParamsConfig || {};
 
-        const allDefaultValues = inherit ? snapshot.pathFromRoot.reduce(function (acc, curr) {
+        const allDefaultValues = inherit ? snapshot.pathFromRoot.reduce((acc, curr) => {
           const currData = curr.data;
           if (!currData || !currData.queryParamsConfig) { return acc; }
           return { ...acc, ...(currData.queryParamsConfig.defaultValues || {}) };
@@ -131,13 +131,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         if (errorKeys.length !== 0) {
           // router.navigateByUrl(url, extras) skips the { queryParams } that are provided inside the extras
           // https://github.com/angular/angular/issues/22668
-          if (!this._redirectUrl) {
+          if (!this.redirectUrl) {
             // TODO: extract this to a tap
             const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
               .reduce((arr, [currKey, currValue]) => currValue ? arr.concat(`${currKey}=${currValue}`) : arr, []);
-            const redirectUrl = `${this._url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;
+            const redirectUrl = `${this.url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;
             this.router.navigateByUrl(redirectUrl);
-            this._redirectUrl = redirectUrl;
+            this.redirectUrl = redirectUrl;
           }
           return;
         }
@@ -151,24 +151,24 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   constructor(public router: Router) {
-    this._snapshot.next(null);
+    this.snapshot.next(null);
   }
 
   private _constructHandler() {
-    if (this._subscription) { return; }
-    this._subscription = this.router.events.pipe(
+    if (this.subscription) { return; }
+    this.subscription = this.router.events.pipe(
       filter(event => !(event instanceof ActivationEnd)),
       tap(event => {
         if (event instanceof NavigationStart) {
-          this._prevFullUrl = this._fullUrl || '';
-          this._fullUrl = event.url;
-          this._url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
+          this.prevFullUrl = this.fullUrl || '';
+          this.fullUrl = event.url;
+          this.url = decodeURIComponent(/[^?]+/.exec(event.url)[0]);
         } else if (event instanceof RoutesRecognized) {
-          this._url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
+          this.url = decodeURIComponent(/[^?]+/.exec(event.urlAfterRedirects)[0]);
         } else if (event instanceof NavigationCancel) {
-          this._fullUrl = this._prevFullUrl;
+          this.fullUrl = this.prevFullUrl;
         } else if (event instanceof NavigationEnd) {
-          this._redirectUrl = null;
+          this.redirectUrl = null;
         }
       }),
       filter(event => {
@@ -179,15 +179,15 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         let currSnapshot = (event as any).snapshot;
         while (currSnapshot && currSnapshot.children.length !== 0) {
           currSnapshot = currSnapshot.children.find(childSnapshot => {
-            return this._url === '/' && childSnapshot.url.length === 0
-              || !!childSnapshot.url.find(segment => this._url.includes(segment.path));
+            return this.url === '/' && childSnapshot.url.length === 0
+              || !!childSnapshot.url.find(segment => this.url.includes(segment.path));
           });
         }
         return currSnapshot;
       }),
       filter(val => !!val),
       distinctUntilChanged()
-    ).subscribe(this._snapshot);
+    ).subscribe(this.snapshot);
   }
 
   select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
@@ -201,14 +201,14 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     isDeactivate = false
   ): Observable<boolean> {
     if (!(allowedValues instanceof Observable)) { allowedValues = observableOf(allowedValues); }
-    if (navigateTo === this._fullUrl) {
+    if (navigateTo === this.fullUrl) {
       throw new Error('Navigating to the same route will result into infinite loop!');
     }
     return this.getStore().pipe(
-      withLatestFrom(this._skip, allowedValues, this._snapshot.pipe(pairwise())),
-      tap(([, shouldSkip]) => { if (shouldSkip) { this._skip.next(false); } }),
+      withLatestFrom(this.skip, allowedValues, this.snapshot.pipe(pairwise())),
+      tap(([, shouldSkip]) => { if (shouldSkip) { this.skip.next(false); } }),
       filter(([, shouldSkip]) => !shouldSkip),
-      map(([queryParams, _shouldSkip, allowedValuesObj, [prevSnapshot, _currentSnapshot]]) => {
+      map(([queryParams, , allowedValuesObj, [prevSnapshot]]) => {
         let successfulMatch = true;
         let redirectQueryParams = {};
         for (const [name, value] of Object.entries(queryParams)) {
@@ -222,10 +222,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           successfulMatch = successfulMatch && isCurrentMatch;
         }
         if (!successfulMatch && typeof navigateTo === 'string') {
-          if (navigateTo === this._prevFullUrl && prevSnapshot) {
+          if (navigateTo === this.prevFullUrl && prevSnapshot) {
             if (!isDeactivate) {
-              this._skip.next(true);
-              this._snapshot.next(prevSnapshot);
+              this.skip.next(true);
+              this.snapshot.next(prevSnapshot);
             }
           } else {
             this.router.navigateByUrl(navigateTo);
@@ -241,7 +241,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-    return this._match(allowedValues, this._prevFullUrl).pipe(first());
+    return this._match(allowedValues, this.prevFullUrl).pipe(first());
   }
 
   canDeactivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: RouterStateSnapshot) {
@@ -249,6 +249,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this._subscription.unsubscribe();
+    this.subscription.unsubscribe();
   }
 }

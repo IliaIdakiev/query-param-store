@@ -25,7 +25,7 @@ export type QueryParamsStoreDefaultGenericValue = string | number | boolean | {
 export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
   value: string,
   multi: true,
-  typeConvertor: StringConstructor | NumberConstructor;
+  typeConvertor: StringConstructor | NumberConstructor | BooleanConstructor;
   separator: string,
   allowedValues?: (null | undefined | string | number | boolean)[]
 };
