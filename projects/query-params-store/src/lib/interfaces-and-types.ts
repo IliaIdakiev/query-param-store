@@ -34,7 +34,8 @@ export interface QueryParamsStoreDefaultMultiBooleanBinaryValue {
   value: number;
   multi: true;
   typeConvertor: BooleanConstructor;
-  count?: number;
+  length?: number;
+  removeInvalid?: boolean;
 }
 
 export interface IQueryParamsStoreRoute<T = any> extends Route {
