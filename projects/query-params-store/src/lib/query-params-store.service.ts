@@ -84,7 +84,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                   (currentValue.typeConvertor === Boolean && typeof val === 'string') ?
                     val === 'true' : (currentValue.typeConvertor || String)(val)) :
               currentValue.value : currentValue;
-          if (typeof currentValue.length === 'number' && res.length < currentValue.length) {
+          if (typeof currentValue === 'object' && typeof currentValue.length === 'number' && res.length < currentValue.length) {
             res = res.concat(new Array(currentValue.length - res.length).fill(false));
           }
           acc[key] = res;
@@ -98,7 +98,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
             const keyConfig = allDefaultValues[key];
-            const isBinaryBoolean = typeof keyConfig.value === 'number' && keyConfig.typeConvertor === Boolean;
+            const isBinaryBoolean =
+              typeof keyConfig === 'object' && typeof keyConfig.value === 'number' && keyConfig.typeConvertor === Boolean;
             const binaryBooleanStringArray = isBinaryBoolean ? (+decodedValue).toString(2).split('') : null;
             let binaryBooleanResult = isBinaryBoolean ?
               binaryBooleanStringArray.slice(0, keyConfig.length).map(val => `${val === '1'}`).reverse() : null;
