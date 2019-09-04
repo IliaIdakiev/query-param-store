@@ -139,7 +139,7 @@ describe('QueryParamsStore', () => {
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
           done();
-        });
+        }, console.error);
       });
 
       it('should parse and return the provided in URL query params', (done) => {
@@ -164,7 +164,7 @@ describe('QueryParamsStore', () => {
           expect(state.allowed).toEqual('Test');
           expect(state.openToggles).toEqual([false, false, true, true, true, true]);
           done();
-        });
+        }, console.error);
       });
 
       it('should remove invalid query params', (done) => {
@@ -183,7 +183,7 @@ describe('QueryParamsStore', () => {
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
           done();
-        });
+        }, console.error);
       });
 
       it('should keep unknown query params', (done) => {
@@ -200,7 +200,7 @@ describe('QueryParamsStore', () => {
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual('test');
           done();
-        });
+        }, console.error);
 
       });
 
@@ -241,7 +241,7 @@ describe('QueryParamsStore', () => {
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual(undefined);
           done();
-        });
+        }, console.error);
 
       });
     });
@@ -295,7 +295,7 @@ describe('QueryParamsStore', () => {
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual('test');
           done();
-        });
+        }, console.error);
 
       });
 
@@ -316,7 +316,7 @@ describe('QueryParamsStore', () => {
           expect(state.best).toEqual(undefined);
           expect(state.filter).toEqual('test');
           done();
-        });
+        }, console.error);
       });
 
       it('should not inherit parent params and remove unknown', (done) => {
@@ -336,7 +336,7 @@ describe('QueryParamsStore', () => {
           expect(state.best).toEqual(undefined);
           expect(state.filter).toEqual('some value');
           done();
-        });
+        }, console.error);
 
       });
 
@@ -394,7 +394,7 @@ describe('QueryParamsStore', () => {
       output.pipe(first()).subscribe(result => {
         expect(result).toEqual(true);
         done();
-      });
+      }, console.error);
     });
 
     it('should successfuly activate with query parameters', (done) => {
@@ -406,7 +406,7 @@ describe('QueryParamsStore', () => {
       output.pipe(first()).subscribe(result => {
         expect(result).toEqual(true);
         done();
-      });
+      }, console.error);
     });
 
     it('should not be able to activate with invalid query parameters', (done) => {
@@ -418,7 +418,7 @@ describe('QueryParamsStore', () => {
         expect(result).toEqual(false);
         expect(route.snapshot.url).toEqual([]);
         done();
-      });
+      }, console.error);
     });
 
   });
@@ -476,14 +476,14 @@ describe('QueryParamsStore', () => {
 
       firstEnd$.subscribe(() => {
         ngZone.run(() => { router.navigateByUrl('/test'); });
-      });
+      }, console.error);
 
       output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result])))), first()).subscribe(([event, result]) => {
         expect(result).toEqual(true);
 
         expect((event as ActivationEnd).snapshot.url[0].path).toEqual('test');
         done();
-      });
+      }, console.error);
     });
 
     it('should not allow to deactivate', (done) => {
@@ -494,13 +494,13 @@ describe('QueryParamsStore', () => {
 
       firstEnd$.subscribe(() => {
         ngZone.run(() => { router.navigateByUrl('/test'); });
-      });
+      }, console.error);
 
       output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result])))), first()).subscribe(([event, result]) => {
         expect((event as ActivationEnd).snapshot.url).toEqual([]);
         expect(result).toEqual(false);
         done();
-      });
+      }, console.error);
     });
 
   });
