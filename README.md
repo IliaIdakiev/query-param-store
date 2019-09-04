@@ -57,6 +57,18 @@ const listRoute: IQueryParamsStoreRoute = {
           // at the end we will recevice an array - ['name:asc', 'email:asc', 'age:desc'];
           typeConvertor: String, // the convertor will be used on each value from the split array 
           // (possible values for typeConvertor - String | Number | Boolean)
+        },
+        openToggles: {
+          typeConvertor: Boolean, // Convert the values to booleans
+          multi: true, // We will be getting a boolean array with true or false values for each open/closed toggle section
+          value: 0, // The initial value will be converted to binary. Since we have 0 it will just be 0 which will be 
+          // represented as [false]. If we had 10 we would have 1010 which will be represented as [false, true, false, true]
+          // which is the reversed of [true, false, true, false] - 1010 (binaries are read from right to left)
+          length: 6, // limit the length of the array result 
+          // in the case of 6 if we have ?openToggles=0 we will have [false, false, false, false, false, false]
+          // if we have ?openToggles=10 we will have [false, true, false, true, false, false]
+          removeInvalid: true // remove the invalid numbers that overflow the lenght
+          // if we have length: 6 and query ?openToggles=800 since 800 is 1100100000 and its length is 10 then it will be removed
         }
       },
       removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property 

@@ -73,13 +73,21 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
         const flatDefaultValues = supportedKeys.reduce((acc, key) => {
           const currentValue = allDefaultValues[key];
-          acc[key] = typeof currentValue === 'object' ?
+          let res = typeof currentValue === 'object' ?
             currentValue.multi && currentValue.value !== null ?
-              (currentValue.value === '' || currentValue.value === undefined) ? [] : `${currentValue.value}`
-                .split(currentValue.separator || ';').map(val =>
+              (currentValue.value === '' || currentValue.value === undefined) ? [] :
+                (
+                  (currentValue.typeConvertor === Boolean && typeof currentValue.value === 'number') ?
+                    currentValue.value.toString(2).split('').slice(0, currentValue.length).map(val => `${val === '1'}`).reverse() :
+                    `${currentValue.value}`.split(currentValue.separator || ';')
+                ).map(val =>
                   (currentValue.typeConvertor === Boolean && typeof val === 'string') ?
                     val === 'true' : (currentValue.typeConvertor || String)(val)) :
               currentValue.value : currentValue;
+          if (typeof currentValue === 'object' && typeof currentValue.length === 'number' && res.length < currentValue.length) {
+            res = res.concat(new Array(currentValue.length - res.length).fill(false));
+          }
+          acc[key] = res;
           return acc;
         }, {});
 
@@ -90,8 +98,21 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
             const keyConfig = allDefaultValues[key];
+            const isBinaryBoolean =
+              typeof keyConfig === 'object' && typeof keyConfig.value === 'number' && keyConfig.typeConvertor === Boolean;
+            const binaryBooleanStringArray = isBinaryBoolean ? (+decodedValue).toString(2).split('') : null;
+            let binaryBooleanResult = isBinaryBoolean ?
+              binaryBooleanStringArray.slice(0, keyConfig.length).map(val => `${val === '1'}`).reverse() : null;
+            const isOverflowing = isBinaryBoolean ? binaryBooleanStringArray.length !== binaryBooleanResult.length : false;
+            if (binaryBooleanResult && binaryBooleanResult.length < keyConfig.length) {
+              binaryBooleanResult = binaryBooleanResult.concat(new Array(keyConfig.length - binaryBooleanResult.length).fill('false'));
+            }
             (keyConfig && keyConfig.multi ?
-              decodedValue.split(keyConfig.separator || ';') : [decodedValue]).forEach(currentDecodedValue => {
+              (
+                isBinaryBoolean ?
+                  binaryBooleanResult :
+                  decodedValue.split(keyConfig.separator || ';')
+              ) : [decodedValue]).forEach(currentDecodedValue => {
                 const converter = keyTypeConverter[key] || String;
                 const isBoolean = ['true', 'false'].includes(currentDecodedValue) && converter === Boolean;
                 const convertedValue = converter(isBoolean ? currentDecodedValue === 'true' ? 1 : 0 : currentDecodedValue);
@@ -99,6 +120,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                 const isValidString = converter === String && typeof convertedValue === 'string';
                 const isValidBoolean = converter === Boolean && typeof convertedValue === 'boolean';
                 if ((isValidNumber || isValidString || isValidBoolean) &&
+                  (!isBinaryBoolean || !keyConfig.removeInvalid || !isOverflowing) &&
                   (!keyConfig || !keyConfig.allowedValues || keyConfig.allowedValues.includes(convertedValue))) {
                   if (keyConfig && keyConfig.multi) {
                     acc[key] = (acc[key] || []).concat(convertedValue);

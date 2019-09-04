@@ -103,6 +103,13 @@ describe('QueryParamsStore', () => {
                   multi: false,
                   typeConvertor: String,
                   allowedValues: ['Test', 'Best']
+                },
+                openToggles: {
+                  typeConvertor: Boolean,
+                  multi: true,
+                  value: 0,
+                  length: 6,
+                  removeInvalid: true
                 }
               }
             }
@@ -130,8 +137,9 @@ describe('QueryParamsStore', () => {
           expect(state.pageStringsOrNull).toEqual(null);
           expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual([]);
           expect(state.allowed).toEqual(null);
+          expect(state.openToggles).toEqual([false, false, false, false, false, false]);
           done();
-        });
+        }, console.error);
       });
 
       it('should parse and return the provided in URL query params', (done) => {
@@ -139,7 +147,7 @@ describe('QueryParamsStore', () => {
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
         // tslint:disable-next-line:max-line-length
-        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArrayWithString=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArrayWithUndefined=10;20;30&pageStringsOrEmptyArrayWithString=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArrayWithUndefined=1;2;3&allowed=Test'); });
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArrayWithString=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArrayWithUndefined=10;20;30&pageStringsOrEmptyArrayWithString=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArrayWithUndefined=1;2;3&allowed=Test&openToggles=60'); });
 
         service.store.subscribe(state => {
           expect(state.pageSize).toEqual(10);
@@ -154,26 +162,28 @@ describe('QueryParamsStore', () => {
           expect(state.pageStringsOrNull).toEqual(['c', '1', 'e']);
           expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual(['1', '2', '3']);
           expect(state.allowed).toEqual('Test');
+          expect(state.openToggles).toEqual([false, false, true, true, true, true]);
           done();
-        });
+        }, console.error);
       });
 
       it('should remove invalid query params', (done) => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test&allowed=hello'); });
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test&allowed=hello&openToggles=100'); });
 
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
-        ).subscribe(([state, e]) => {
+        ).pipe(first()).subscribe(([state, e]) => {
           expect(e.url).toEqual('/?filter=test');
           expect(state.pageSize).toEqual(30);
           expect(state.filter).toEqual('test');
           expect(state.allowed).toEqual(null);
+          expect(state.openToggles).toEqual([false, false, false, false, false, false]);
           done();
-        });
+        }, console.error);
       });
 
       it('should keep unknown query params', (done) => {
@@ -185,12 +195,12 @@ describe('QueryParamsStore', () => {
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
-        ).subscribe(([state, e]) => {
+        ).pipe(first()).subscribe(([state, e]) => {
           expect(e.url).toEqual('/?pageSize=10&best=test');
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual('test');
           done();
-        });
+        }, console.error);
 
       });
 
@@ -226,12 +236,12 @@ describe('QueryParamsStore', () => {
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
-        ).subscribe(([state, e]) => {
+        ).pipe(first()).subscribe(([state, e]) => {
           expect(e.url).toEqual('/?pageSize=10');
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual(undefined);
           done();
-        });
+        }, console.error);
 
       });
     });
@@ -280,12 +290,12 @@ describe('QueryParamsStore', () => {
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
-        ).subscribe(([state, e]) => {
+        ).pipe(first()).subscribe(([state, e]) => {
           expect(e.url).toEqual('/parent/child?pageSize=10&best=test');
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual('test');
           done();
-        });
+        }, console.error);
 
       });
 
@@ -300,13 +310,13 @@ describe('QueryParamsStore', () => {
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
-        ).subscribe(([state, e]) => {
+        ).pipe(first()).subscribe(([state, e]) => {
           expect(e.url).toEqual('/parent/child?pageSize=10');
           expect(state.pageSize).toEqual(10);
           expect(state.best).toEqual(undefined);
           expect(state.filter).toEqual('test');
           done();
-        });
+        }, console.error);
       });
 
       it('should not inherit parent params and remove unknown', (done) => {
@@ -320,13 +330,13 @@ describe('QueryParamsStore', () => {
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
-        ).subscribe(([state, e]) => {
+        ).pipe(first()).subscribe(([state, e]) => {
           expect(e.url).toEqual('/parent/child?filter=some%20value');
           expect(state.pageSize).toEqual(undefined);
           expect(state.best).toEqual(undefined);
           expect(state.filter).toEqual('some value');
           done();
-        });
+        }, console.error);
 
       });
 
@@ -384,7 +394,7 @@ describe('QueryParamsStore', () => {
       output.pipe(first()).subscribe(result => {
         expect(result).toEqual(true);
         done();
-      });
+      }, console.error);
     });
 
     it('should successfuly activate with query parameters', (done) => {
@@ -396,7 +406,7 @@ describe('QueryParamsStore', () => {
       output.pipe(first()).subscribe(result => {
         expect(result).toEqual(true);
         done();
-      });
+      }, console.error);
     });
 
     it('should not be able to activate with invalid query parameters', (done) => {
@@ -408,7 +418,7 @@ describe('QueryParamsStore', () => {
         expect(result).toEqual(false);
         expect(route.snapshot.url).toEqual([]);
         done();
-      });
+      }, console.error);
     });
 
   });
@@ -466,14 +476,14 @@ describe('QueryParamsStore', () => {
 
       firstEnd$.subscribe(() => {
         ngZone.run(() => { router.navigateByUrl('/test'); });
-      });
+      }, console.error);
 
-      output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result]))))).subscribe(([event, result]) => {
+      output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result])))), first()).subscribe(([event, result]) => {
         expect(result).toEqual(true);
 
         expect((event as ActivationEnd).snapshot.url[0].path).toEqual('test');
         done();
-      });
+      }, console.error);
     });
 
     it('should not allow to deactivate', (done) => {
@@ -484,13 +494,13 @@ describe('QueryParamsStore', () => {
 
       firstEnd$.subscribe(() => {
         ngZone.run(() => { router.navigateByUrl('/test'); });
-      });
+      }, console.error);
 
-      output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result]))))).subscribe(([event, result]) => {
+      output.pipe(switchMap(result => firstEnd$.pipe(map(e => ([e, result])))), first()).subscribe(([event, result]) => {
         expect((event as ActivationEnd).snapshot.url).toEqual([]);
         expect(result).toEqual(false);
         done();
-      });
+      }, console.error);
     });
 
   });
