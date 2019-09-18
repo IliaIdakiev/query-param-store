@@ -40,11 +40,11 @@ export interface QueryParamsStoreDefaultMultiBooleanBinaryValue {
 
 export interface IQueryParamsStoreRoute<T = any> extends Route {
   data?: IQueryParamsStoreData<T>;
-  children?: IQueryParamStoreRoutes;
+  children?: IQueryParamsStoreRoutes;
   [key: string]: any;
 }
 
-export type IQueryParamStoreRoutes<T = any> = IQueryParamsStoreRoute<T>[];
+export type IQueryParamsStoreRoutes<T = any> = IQueryParamsStoreRoute<T>[];
 
 export interface IAllowedValuesConfig {
   [paramName: string]: {
