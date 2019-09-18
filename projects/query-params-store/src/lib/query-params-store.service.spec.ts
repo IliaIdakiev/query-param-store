@@ -12,7 +12,7 @@ import {
   CanDeactivate,
   ActivationEnd
 } from '@angular/router';
-import { IQueryParamStoreRoutes } from './interfaces-and-types';
+import { IQueryParamsStoreRoutes } from './interfaces-and-types';
 import { NgZone } from '@angular/core';
 import { zip, Subject } from 'rxjs';
 import { filter, tap, first, switchMap, map } from 'rxjs/operators';
@@ -37,7 +37,7 @@ describe('QueryParamsStore', () => {
         router = TestBed.get(Router);
 
         class TestComponent { }
-        const configs: IQueryParamStoreRoutes = [{
+        const configs: IQueryParamsStoreRoutes = [{
           path: '',
           pathMatch: 'full',
           component: TestComponent,
@@ -210,7 +210,7 @@ describe('QueryParamsStore', () => {
       beforeEach(() => {
         class TestComponent { }
         router = TestBed.get(Router);
-        const configs: IQueryParamStoreRoutes = [{
+        const configs: IQueryParamsStoreRoutes = [{
           path: '',
           pathMatch: 'full',
           component: TestComponent,
@@ -250,7 +250,7 @@ describe('QueryParamsStore', () => {
       const setConfig = (data: { childRemoveUnknown?: boolean, childInherit?: boolean } = {}) => {
         class TestComponent { }
         router = TestBed.get(Router);
-        const configs: IQueryParamStoreRoutes = [{
+        const configs: IQueryParamsStoreRoutes = [{
           path: 'parent',
           component: TestComponent,
           data: {
@@ -359,7 +359,7 @@ describe('QueryParamsStore', () => {
         }
       }
 
-      const configs: IQueryParamStoreRoutes = [{
+      const configs: IQueryParamsStoreRoutes = [{
         path: '',
         pathMatch: 'full',
         component: TestComponent,
@@ -440,7 +440,7 @@ describe('QueryParamsStore', () => {
         }
       }
 
-      const configs: IQueryParamStoreRoutes = [{
+      const configs: IQueryParamsStoreRoutes = [{
         path: '',
         pathMatch: 'full',
         component: TestComponent,
