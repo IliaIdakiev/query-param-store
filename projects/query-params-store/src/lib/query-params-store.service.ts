@@ -11,7 +11,8 @@ import {
 } from '@angular/router';
 import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
 import { map, filter, tap, distinctUntilChanged, withLatestFrom, first, pairwise, startWith } from 'rxjs/operators';
-import { IQueryParamsStoreData, IAllowedValuesConfig } from './interfaces-and-types';
+import { IQueryParamsStoreData, IAllowedValuesConfig, QueryParamsStoreDefaultMultiBooleanBinaryValue } from './interfaces-and-types';
+import { parseBinaryBoolean } from './utils';
 
 type SelectorFn<T> = (a: any) => T;
 
@@ -158,7 +159,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (!this.redirectUrl) {
             // TODO: extract this to a tap
             const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
-              .reduce((arr, [currKey, currValue]) => currValue ? arr.concat(`${currKey}=${currValue}`) : arr, []);
+              .reduce((arr, [currKey, currValue]) => {
+                const cfg = data.queryParamsConfig.defaultValues[currKey] as QueryParamsStoreDefaultMultiBooleanBinaryValue ||
+                  { typeConvertor: null, multi: null };
+                const isBinaryBoolean = cfg.typeConvertor === Boolean && cfg.multi === true;
+                const res = `${currKey}=${isBinaryBoolean ? parseBinaryBoolean(currValue as boolean[]) : currValue}`;
+                return currValue ? arr.concat(res) : arr;
+              }, []);
             const redirectUrl = `${this.url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;
             this.router.navigateByUrl(redirectUrl);
             this.redirectUrl = redirectUrl;

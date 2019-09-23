@@ -172,7 +172,6 @@ describe('QueryParamsStore', () => {
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
         ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test&allowed=hello&openToggles=100'); });
-
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
@@ -182,6 +181,25 @@ describe('QueryParamsStore', () => {
           expect(state.filter).toEqual('test');
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
+          done();
+        }, console.error);
+      });
+
+      it('should remove invalid query params and maintain binary boolean number', (done) => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.setUpLocationChangeListener();
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test&allowed=hello&openToggles=3'); });
+
+        zip(
+          service.store,
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+        ).pipe(first()).subscribe(([state, e]) => {
+          expect(e.url).toEqual('/?filter=test&openToggles=3');
+          expect(state.pageSize).toEqual(30);
+          expect(state.filter).toEqual('test');
+          expect(state.allowed).toEqual(null);
+          expect(state.openToggles).toEqual([true, true, false, false, false, false]);
           done();
         }, console.error);
       });
