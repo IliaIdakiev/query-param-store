@@ -74,7 +74,8 @@ const listRoute: IQueryParamsStoreRoute = {
       removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property
       // (default value - false) (this triggers a router.navigate with all unknown query params set to undefined)
       noQueryParams: false, // remove all query params for current route (default value - false)
-      inherit: true // inherit all query parameters from parent routes (default value - true)
+      inherit: true, // inherit all query parameters from parent routes (default value - true)
+      caseSensitive: true // match query parameters with case sensitive logic (default value - true)
     },
   }
 };

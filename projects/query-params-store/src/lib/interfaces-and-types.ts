@@ -5,6 +5,7 @@ export interface IQueryParamsStoreData<T = any> {
   queryParamsConfig?: {
     noQueryParams?: boolean;
     removeUnknown?: boolean;
+    caseSensitive?: boolean;
     inherit?: boolean;
     defaultValues?: {
       [k in keyof T]: QueryParamsStoreDefaultValue;

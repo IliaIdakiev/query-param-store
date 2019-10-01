@@ -49,7 +49,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           return null;
         }
 
-        const { defaultValues = {}, noQueryParams = false, removeUnknown = false, inherit = true } = data.queryParamsConfig || {};
+        const {
+          defaultValues = {},
+          noQueryParams = false,
+          removeUnknown = false,
+          inherit = true,
+          caseSensitive = true
+        } = data.queryParamsConfig || {};
 
         const allDefaultValues = inherit ? snapshot.pathFromRoot.reduce((acc, curr) => {
           const currData = curr.data;
@@ -95,7 +101,11 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         const result = { errors: {}, queryParams: null };
 
         const queryParams = Object.entries(snapshot.queryParams).reduce((acc, match: [string, string]) => {
-          const [key, value] = match;
+          const [rawKey, value] = match;
+          const key = caseSensitive
+            ? rawKey
+            : supportedKeys.find(objKey => rawKey.toLowerCase() === objKey.toLowerCase());
+
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
             const keyConfig = allDefaultValues[key];
