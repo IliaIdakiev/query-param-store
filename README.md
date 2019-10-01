@@ -5,6 +5,11 @@
 Developing web applications requires persistent state and what better way to store it than using the query parameters for that. With this npm module (`yarn add query-params-store` || `npm install query-params-store`) you can easily configure what query perameters your application route will have, what are the default values (values used when the query parameter doesn't exist in the URL),
 restrict what query parameters can be used on the current route and more.
 
+
+# Video Presentation on Angular Air
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/jCzZbl9b7w4/0.jpg)](https://www.youtube.com/watch?v=jCzZbl9b7w4)
+
 ---
 
 ## Configuration
