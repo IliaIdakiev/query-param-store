@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { DetailComponent } from './detail.component';
-import { IQueryParamStoreRoutes } from 'query-params-store';
+import { IQueryParamsStoreRoutes } from 'query-params-store';
 import { DetailResolver } from './guards/detail.resolver';
 import { DetailDeactivate } from './guards/detail.deactivate';
 import { DetailActivate } from './guards/detail.activate';
@@ -12,7 +12,7 @@ import { Test2Activate } from './guards/test2.activate';
 import { TestDeactivate } from './guards/test.deactivate';
 import { Test2Deactivate } from './guards/test2.deactivate';
 
-const routes: IQueryParamStoreRoutes = [
+const routes: IQueryParamsStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',
