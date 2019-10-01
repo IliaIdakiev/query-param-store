@@ -3,9 +3,9 @@ import { RouterModule } from '@angular/router';
 import { ListComponent } from './list/list.component';
 import { ListResolver } from './guards/list.resolver';
 import { ListActivate } from './guards/list.activate';
-import { IQueryParamStoreRoutes } from 'query-params-store';
+import { IQueryParamsStoreRoutes } from 'query-params-store';
 
-const routes: IQueryParamStoreRoutes = [
+const routes: IQueryParamsStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',

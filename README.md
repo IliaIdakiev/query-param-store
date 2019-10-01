@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/IliaIdakiev/query-param-store.svg?branch=master)](https://travis-ci.com/IliaIdakiev/query-param-store)
 
-# Angular Query Params Store - RxJS Query Params State Management Container for Angular 
+# Angular Query Params Store - RxJS Query Params State Management Container for Angular
 
 Developing web applications requires persistent state and what better way to store it than using the query parameters for that. With this npm module (`yarn add query-params-store` || `npm install query-params-store`) you can easily configure what query perameters your application route will have, what are the default values (values used when the query parameter doesn't exist in the URL),
 restrict what query parameters can be used on the current route and more.
@@ -24,7 +24,7 @@ export class AppModule { }
 
 app-routing.module.ts
 ```typescript
-import { IQueryParamsStoreRoute, IQueryParamStoreRoutes } from 'query-params-store';
+import { IQueryParamsStoreRoute, IQueryParamsStoreRoutes } from 'query-params-store';
 
 const listRoute: IQueryParamsStoreRoute = {
   path: 'list',
@@ -35,51 +35,52 @@ const listRoute: IQueryParamsStoreRoute = {
     queryParamsConfig: {
       defaultValues: {
         page: 0, // the query parameter - page will be of type number with default value of 0 (type number)
-        pageSize: { 
+        pageSize: {
           value: '30' // the query parameter - pageSize will be of type string with default value of '30' (type string)
           allowedValues: ['30', '20', '10'] // (optional) the full set of allowed values for the current query param
           // if the provided value doesn't match any of the listed once it will be removed and the default one
           // will be provided
-        }, 
+        },
         filter: {
           value: null, // the default value of the query parameter filter will be null
-          typeConvertor: String, // if a value inside the URL is provided it will be automatically parsed as String 
+          typeConvertor: String, // if a value inside the URL is provided it will be automatically parsed as String
           // If parsing is not successful the query parameter will be removed.
           // (possible values for typeConvertor - String | Number | Boolean)
           multi: false // it will be a single value (not an array)
         },
         sort: {
-          multi: true, // the provided value (either from the URL or the default one) will be threated as a string and it 
+          multi: true, // the provided value (either from the URL or the default one) will be threated as a string and it
           // will be split by the given separator bellow
           separator: ';' // the seperator that we split by
-          value: 'name:asc;email:asc;age:desc', // the default value of the query parameter sort will be 
-          // ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and 
+          value: 'name:asc;email:asc;age:desc', // the default value of the query parameter sort will be
+          // ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and
           // at the end we will recevice an array - ['name:asc', 'email:asc', 'age:desc'];
-          typeConvertor: String, // the convertor will be used on each value from the split array 
+          typeConvertor: String, // the convertor will be used on each value from the split array
           // (possible values for typeConvertor - String | Number | Boolean)
         },
         openToggles: {
           typeConvertor: Boolean, // Convert the values to booleans
           multi: true, // We will be getting a boolean array with true or false values for each open/closed toggle section
-          value: 0, // The initial value will be converted to binary. Since we have 0 it will just be 0 which will be 
+          value: 0, // The initial value will be converted to binary. Since we have 0 it will just be 0 which will be
           // represented as [false]. If we had 10 we would have 1010 which will be represented as [false, true, false, true]
           // which is the reversed of [true, false, true, false] - 1010 (binaries are read from right to left)
-          length: 6, // limit the length of the array result 
+          length: 6, // limit the length of the array result
           // in the case of 6 if we have ?openToggles=0 we will have [false, false, false, false, false, false]
           // if we have ?openToggles=10 we will have [false, true, false, true, false, false]
           removeInvalid: true // remove the invalid numbers that overflow the lenght
           // if we have length: 6 and query ?openToggles=800 since 800 is 1100100000 and its length is 10 then it will be removed
         }
       },
-      removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property 
+      removeUnknown: true, // remove all query params that don't match the ones provided in defaultValues config property
       // (default value - false) (this triggers a router.navigate with all unknown query params set to undefined)
       noQueryParams: false, // remove all query params for current route (default value - false)
-      inherit: true // inherit all query parameters from parent routes (default value - true)
+      inherit: true, // inherit all query parameters from parent routes (default value - true)
+      caseSensitive: true // match query parameters with case sensitive logic (default value - true)
     },
   }
 };
 
-const routes: IQueryParamStoreRoutes = [
+const routes: IQueryParamsStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',
@@ -117,7 +118,7 @@ export class ListResolver implements Resolve<Observable<any[]>> {
       switchMap((queryParams) => {
         const { page, pageSize, filter, sort } = queryParams;
         return this.userService.load(page, pageSize, filter, sort);
-      }), 
+      }),
       first(),
       catchError(error => {
         // handle error...

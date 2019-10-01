@@ -264,6 +264,62 @@ describe('QueryParamsStore', () => {
       });
     });
 
+    describe('simple navigation with case sensitive param option', () => {
+      beforeEach(() => {
+        class TestComponent { }
+        router = TestBed.get(Router);
+        const configs: IQueryParamsStoreRoutes = [{
+          path: '',
+          pathMatch: 'full',
+          component: TestComponent,
+          data: {
+            queryParamsConfig: {
+              defaultValues: {
+                pageSize: 30 // number default config
+              },
+              caseSensitive: false
+            }
+          }
+        }];
+
+        router.resetConfig(configs);
+      });
+
+      it('should match case insensitive query params', (done) => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.setUpLocationChangeListener();
+        ngZone.run(() => { router.navigateByUrl('/?PAGESIZE=10'); });
+
+        zip(
+          service.store,
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+        ).pipe(first()).subscribe(([state, e]) => {
+          expect(e.url).toEqual('/?PAGESIZE=10');
+          expect(state.pageSize).toEqual(10);
+          done();
+        }, console.error);
+
+      });
+
+      it('should match case insensitive query params and duplicates (last one wins)', (done) => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.setUpLocationChangeListener();
+        ngZone.run(() => { router.navigateByUrl('/?pagesize=10&PAGESIZE=20'); });
+
+        zip(
+          service.store,
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+        ).pipe(first()).subscribe(([state, e]) => {
+          expect(e.url).toEqual('/?pagesize=10&PAGESIZE=20');
+          expect(state.pageSize).toEqual(20);
+          done();
+        }, console.error);
+
+      });
+    });
+
     describe('nested routes', () => {
       const setConfig = (data: { childRemoveUnknown?: boolean, childInherit?: boolean } = {}) => {
         class TestComponent { }
