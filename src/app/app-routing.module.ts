@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { HomeActivate } from './home.activate';
-import { IQueryParamsStoreRoutes } from 'projects/query-params-store/src/public_api';
+import { IQueryParamsStoreRoutes } from 'query-params-store';
 
 const routes: IQueryParamsStoreRoutes = [
   {
