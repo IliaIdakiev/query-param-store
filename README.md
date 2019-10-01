@@ -6,9 +6,11 @@ Developing web applications requires persistent state and what better way to sto
 restrict what query parameters can be used on the current route and more.
 
 
-# Video Presentation on Angular Air
+# Video Presentations
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/jCzZbl9b7w4/0.jpg)](https://www.youtube.com/watch?v=jCzZbl9b7w4)
+
+[![IMAGE ALT TEXT HERE](https://scontent.fsof9-1.fna.fbcdn.net/v/t1.0-9/71153220_10220855638250029_2918228624622485504_o.jpg?_nc_cat=105&_nc_oc=AQkeYv9MfwCL8EQJ7rSP_09A0G6VQZDjcpikRkR3wpMGcx7bcE2gbz055MJwKNkRcWQ&_nc_ht=scontent.fsof9-1.fna&oh=7f9ad2d6b1a1a2dbbab0224943b8e2f4&oe=5DF7123A)](https://www.twitch.tv/videos/488611683##)
 
 ---
 
