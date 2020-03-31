@@ -17,8 +17,8 @@ const routes: IQueryParamsStoreRoutes = [
     resolve: [ListResolver],
     loadChildren: './detail/detail.module#DetailModule',
     data: {
-      queryParamsConfig: {
-        defaultValues: {
+      storeConfig: {
+        stateConfig: {
           page: 0,
           pageSize: {
             value: 20,

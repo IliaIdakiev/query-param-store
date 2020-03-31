@@ -25,11 +25,10 @@ const routes: IQueryParamsStoreRoutes = [
     canActivate: [DetailActivate],
     canDeactivate: [DetailDeactivate],
     data: {
-      queryParamsConfig: {
-        defaultValues: {
+      storeConfig: {
+        stateConfig: {
           best: {
             value: null,
-            multi: false,
             typeConvertor: String
           },
         },
@@ -49,8 +48,8 @@ const routes: IQueryParamsStoreRoutes = [
       canActivate: [TestActivate],
       canDeactivate: [TestDeactivate],
       data: {
-        queryParamsConfig: {
-          defaultValues: {
+        storeConfig: {
+          stateConfig: {
             test1: {
               value: 'test1',
               allowedValues: ['test1', 'test2'],
@@ -69,8 +68,8 @@ const routes: IQueryParamsStoreRoutes = [
       canActivate: [Test2Activate],
       canDeactivate: [Test2Deactivate],
       data: {
-        queryParamsConfig: {
-          defaultValues: {
+        storeConfig: {
+          stateConfig: {
             test2: 'test2',
             completed: {
               value: null,

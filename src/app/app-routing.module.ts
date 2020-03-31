@@ -11,8 +11,8 @@ const routes: IQueryParamsStoreRoutes = [
     component: HomeComponent,
     canActivate: [HomeActivate],
     data: {
-      queryParamsConfig: {
-        defaultValues: {
+      storeConfig: {
+        stateConfig: {
           page: {
             value: '1;2;3',
             typeConvertor: Number,

@@ -42,44 +42,46 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       filter(val => !!val),
       map(snapshot => {
         const data: IQueryParamsStoreData = snapshot.data ||
-          { queryParamsConfig: { defaultValues: {}, noQueryParams: false, removeUnknown: false } };
+          { storeConfig: { stateConfig: {}, noQueryParams: false, removeUnknown: false } };
 
-        if (data.queryParamsConfig && data.queryParamsConfig.noQueryParams) {
+        if (data.storeConfig && data.storeConfig.noQueryParams) {
           this.router.navigateByUrl(this.url);
           return null;
         }
 
         const {
-          defaultValues = {},
+          stateConfig = {},
           noQueryParams = false,
           removeUnknown = false,
           inherit = true,
           caseSensitive = true
-        } = data.queryParamsConfig || {};
+        } = data.storeConfig || {};
 
-        const allDefaultValues = inherit ? snapshot.pathFromRoot.reduce((acc, curr) => {
+        const allstateConfig = inherit ? snapshot.pathFromRoot.reduce((acc, curr) => {
           const currData = curr.data;
-          if (!currData || !currData.queryParamsConfig) { return acc; }
-          return { ...acc, ...(currData.queryParamsConfig.defaultValues || {}) };
-        }, defaultValues) : defaultValues;
+          if (!currData || !currData.storeConfig) { return acc; }
+          return { ...acc, ...(currData.storeConfig.stateConfig || {}) };
+        }, stateConfig) : stateConfig;
 
-        let supportedKeys = Object.keys(allDefaultValues);
+        let supportedKeys = Object.keys(allstateConfig);
 
         const keyTypeConverter = supportedKeys.reduce((acc, key) => {
-          const defaultValue = allDefaultValues[key];
+          const defaultValue = allstateConfig[key];
           if (defaultValue === null || defaultValue === undefined) {
             console.warn(`Query Params Store > Invalid value '${defaultValue}' for key '${key}'`);
             return acc;
           }
+
           acc[key] = defaultValue.typeConvertor ||
-            (typeof defaultValue === 'number' ? Number : typeof defaultValue === 'boolean' ? Boolean : String);
+            (typeof (defaultValue && defaultValue.value || defaultValue) === 'number' ? Number :
+              typeof (defaultValue && defaultValue.value || defaultValue) === 'boolean' ? Boolean : String);
           return acc;
         }, {});
 
         supportedKeys = Object.keys(keyTypeConverter);
 
-        const flatDefaultValues = supportedKeys.reduce((acc, key) => {
-          const currentValue = allDefaultValues[key];
+        const flatstateConfig = supportedKeys.reduce((acc, key) => {
+          const currentValue = allstateConfig[key];
           let res = typeof currentValue === 'object' ?
             currentValue.multi && currentValue.value !== null ?
               (currentValue.value === '' || currentValue.value === undefined) ? [] :
@@ -108,7 +110,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
           if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
             const decodedValue = decodeURIComponent(value);
-            const keyConfig = allDefaultValues[key];
+            const keyConfig = allstateConfig[key];
             const isBinaryBoolean =
               typeof keyConfig === 'object' && typeof keyConfig.value === 'number' && keyConfig.typeConvertor === Boolean;
             const binaryBooleanStringArray = isBinaryBoolean ? (+decodedValue).toString(2).split('') : null;
@@ -139,14 +141,14 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                     acc[key] = convertedValue;
                   }
                 } else {
-                  acc[key] = flatDefaultValues[key];
+                  acc[key] = flatstateConfig[key];
                   result.errors = {
                     ...result.errors,
                     [key]: `Invalid value`
                   };
                 }
               });
-          } else if (data.queryParamsConfig.removeUnknown) {
+          } else if (data.storeConfig.removeUnknown) {
             result.errors = {
               ...result.errors,
               [key]: 'Unknown param'
@@ -170,7 +172,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
             // TODO: extract this to a tap
             const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
               .reduce((arr, [currKey, currValue]) => {
-                const cfg = data.queryParamsConfig.defaultValues[currKey] as QueryParamsStoreDefaultMultiBooleanBinaryValue ||
+                const cfg = data.storeConfig.stateConfig[currKey] as QueryParamsStoreDefaultMultiBooleanBinaryValue ||
                   { typeConvertor: null, multi: null };
                 const isBinaryBoolean = cfg.typeConvertor === Boolean && cfg.multi === true;
                 const res = `${currKey}=${isBinaryBoolean ? parseBinaryBoolean(currValue as boolean[]) : currValue}`;
@@ -182,7 +184,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           }
           return;
         }
-        return Object.assign({}, flatDefaultValues, result.queryParams);
+        return Object.assign({}, flatstateConfig, result.queryParams);
       }),
     ).pipe(filter(val => val !== undefined));
     if (previous) {

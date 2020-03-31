@@ -2,12 +2,12 @@ import { Route } from '@angular/router';
 import { Observable } from 'rxjs';
 
 export interface IQueryParamsStoreData<T = any> {
-  queryParamsConfig?: {
+  storeConfig?: {
     noQueryParams?: boolean;
     removeUnknown?: boolean;
     caseSensitive?: boolean;
     inherit?: boolean;
-    defaultValues?: {
+    stateConfig?: {
       [k in keyof T]: QueryParamsStoreDefaultValue;
     };
   };
@@ -18,8 +18,8 @@ export type QueryParamsStoreDefaultValue = QueryParamsStoreDefaultGenericValue |
 
 export type QueryParamsStoreDefaultGenericValue = string | number | boolean | {
   value: null | undefined | string | number | boolean,
-  typeConvertor: StringConstructor | NumberConstructor | BooleanConstructor
-  multi: false;
+  typeConvertor?: StringConstructor | NumberConstructor | BooleanConstructor
+  multi?: false;
   allowedValues?: (null | undefined | string | number | boolean)[]
 };
 

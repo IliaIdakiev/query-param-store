@@ -3,5 +3,8 @@
   "dest": "../../dist/query-params-store",
   "lib": {
     "entryFile": "src/public_api.ts"
-  }
+  },
+  "whitelistedNonPeerDependencies": [
+    "core-js"
+  ]
 }

@@ -42,8 +42,8 @@ describe('QueryParamsStore', () => {
           pathMatch: 'full',
           component: TestComponent,
           data: {
-            queryParamsConfig: {
-              defaultValues: {
+            storeConfig: {
+              stateConfig: {
                 pageSize: 30, // number default config
                 filter: '', // string default config
                 stringOrNull: {
@@ -110,6 +110,10 @@ describe('QueryParamsStore', () => {
                   value: 0,
                   length: 6,
                   removeInvalid: true
+                },
+                pageSizeWithAllowedValues: {
+                  value: 1000,
+                  allowedValues: [1, 1000]
                 }
               }
             }
@@ -138,7 +142,8 @@ describe('QueryParamsStore', () => {
           expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual([]);
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
-          done();
+          expect(state.pageSizeWithAllowedValues).toEqual(1000),
+            done();
         }, console.error);
       });
 
@@ -147,7 +152,7 @@ describe('QueryParamsStore', () => {
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
         // tslint:disable-next-line:max-line-length
-        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArrayWithString=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArrayWithUndefined=10;20;30&pageStringsOrEmptyArrayWithString=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArrayWithUndefined=1;2;3&allowed=Test&openToggles=60'); });
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArrayWithString=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArrayWithUndefined=10;20;30&pageStringsOrEmptyArrayWithString=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArrayWithUndefined=1;2;3&allowed=Test&openToggles=60&pageSizeWithAllowedValues=1'); });
 
         service.store.subscribe(state => {
           expect(state.pageSize).toEqual(10);
@@ -163,7 +168,8 @@ describe('QueryParamsStore', () => {
           expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual(['1', '2', '3']);
           expect(state.allowed).toEqual('Test');
           expect(state.openToggles).toEqual([false, false, true, true, true, true]);
-          done();
+          expect(state.pageSizeWithAllowedValues).toEqual(1),
+            done();
         }, console.error);
       });
 
@@ -171,7 +177,8 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test&allowed=hello&openToggles=100'); });
+        // tslint:disable-next-line:max-line-length
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=invalid&filter=test&allowed=hello&openToggles=100&pageSizeWithAllowedValues=300'); });
         zip(
           service.store,
           router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
@@ -181,7 +188,8 @@ describe('QueryParamsStore', () => {
           expect(state.filter).toEqual('test');
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
-          done();
+          expect(state.pageSizeWithAllowedValues).toEqual(1000),
+            done();
         }, console.error);
       });
 
@@ -233,8 +241,8 @@ describe('QueryParamsStore', () => {
           pathMatch: 'full',
           component: TestComponent,
           data: {
-            queryParamsConfig: {
-              defaultValues: {
+            storeConfig: {
+              stateConfig: {
                 pageSize: 30, // number default config
               },
               removeUnknown: true
@@ -273,8 +281,8 @@ describe('QueryParamsStore', () => {
           pathMatch: 'full',
           component: TestComponent,
           data: {
-            queryParamsConfig: {
-              defaultValues: {
+            storeConfig: {
+              stateConfig: {
                 pageSize: 30 // number default config
               },
               caseSensitive: false
@@ -328,8 +336,8 @@ describe('QueryParamsStore', () => {
           path: 'parent',
           component: TestComponent,
           data: {
-            queryParamsConfig: {
-              defaultValues: {
+            storeConfig: {
+              stateConfig: {
                 pageSize: 30, // number default config
               },
               removeUnknown: true
@@ -339,10 +347,10 @@ describe('QueryParamsStore', () => {
             path: 'child',
             component: TestComponent,
             data: {
-              queryParamsConfig: {
+              storeConfig: {
                 inherit: data.childInherit,
                 removeUnknown: data.childRemoveUnknown || false,
-                defaultValues: {
+                stateConfig: {
                   filter: 'test'
                 }
               }
@@ -439,8 +447,8 @@ describe('QueryParamsStore', () => {
         component: TestComponent,
         canActivate: [TestCanActivate],
         data: {
-          queryParamsConfig: {
-            defaultValues: {
+          storeConfig: {
+            stateConfig: {
               role: {
                 value: null,
                 typeConvertor: String,
@@ -520,8 +528,8 @@ describe('QueryParamsStore', () => {
         component: TestComponent,
         canDeactivate: [TestCanDectivate],
         data: {
-          queryParamsConfig: {
-            defaultValues: {
+          storeConfig: {
+            stateConfig: {
               completed: false
             }
           }
