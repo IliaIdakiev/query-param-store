@@ -1,16 +1,18 @@
 import { Route } from '@angular/router';
 import { Observable } from 'rxjs';
 
-export interface IQueryParamsStoreData<T = any> {
-  storeConfig?: {
-    noQueryParams?: boolean;
-    removeUnknown?: boolean;
-    caseSensitive?: boolean;
-    inherit?: boolean;
-    stateConfig?: {
-      [k in keyof T]: QueryParamsStoreDefaultValue;
-    };
+export interface IQueryParamsStoreConfig<T = any> {
+  noQueryParams?: boolean;
+  removeUnknown?: boolean;
+  caseSensitive?: boolean;
+  inherit?: boolean;
+  stateConfig?: {
+    [k in keyof T]: QueryParamsStoreDefaultValue;
   };
+}
+
+export interface IQueryParamsStoreData<T = any> {
+  storeConfig?: IQueryParamsStoreConfig<T>;
   [key: string]: any;
 }
 
