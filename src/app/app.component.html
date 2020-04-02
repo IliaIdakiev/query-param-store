@@ -1,16 +1,4 @@
-<nav>
-  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-  <a routerLink="/user" routerLinkActive="active" queryParamsHandling="merge">User</a>
-  <a routerLink="/user/add" routerLinkActive="active" queryParamsHandling="merge">Add</a>
-</nav>
-<router-outlet></router-outlet>
-
-<div>
-  Current Query Params {{ store | async | json }} (depending on current route configuration) <br>
-  (Check out browser console for more info on guard query params)
-</div>
-
-<div>
-  <a [routerLink]="['/user/list/detail', { outlets: { 'test': ['test2'] } }]" routerLinkActive="active"
-    queryParamsHandling="merge" [queryParams]="{ page: 20, pageSize: 40 }">/user/list/detail?page=20&pageSize=40</a>
+<app-navigation></app-navigation>
+<div id="content-container">
+  <router-outlet></router-outlet>
 </div>

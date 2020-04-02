@@ -1,36 +1,21 @@
-import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { HomeComponent } from './home/home.component';
-import { HomeActivate } from './home.activate';
 import { IQueryParamsStoreRoutes } from 'query-params-store';
+import { NotFoundComponent } from './not-found/not-found.component';
 
 const routes: IQueryParamsStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',
-    component: HomeComponent,
-    canActivate: [HomeActivate],
-    data: {
-      storeConfig: {
-        stateConfig: {
-          page: {
-            value: '1;2;3',
-            typeConvertor: Number,
-            multi: true,
-            separator: ';'
-          }
-        }
-      }
-    }
+    redirectTo: 'post'
   },
   {
-    path: 'user',
-    loadChildren: './user/user.module#UserModule'
+    path: 'post',
+    loadChildren: () => import('./post/post.module').then(mod => mod.PostModule),
+  },
+  {
+    path: '**',
+    component: NotFoundComponent
   }
 ];
 
-@NgModule({
-  imports: [RouterModule.forRoot(routes, { enableTracing: false })],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }
+export const AppRoutingModule = RouterModule.forRoot(routes);

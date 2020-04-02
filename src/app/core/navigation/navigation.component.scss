@@ -1,0 +1,21 @@
+nav {
+  margin-left: 15px;
+  border-left: 1px solid white;
+  padding-left: 15px;
+  
+  a {
+    margin-right: 10px;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-size: 16px;
+    border: 0;
+  }
+}
+
+#admin-box {
+  width: 100%;
+  text-align: right;
+  span {
+    margin-right: 20px;
+  }
+}

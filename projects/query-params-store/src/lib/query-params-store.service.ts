@@ -233,9 +233,17 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     ).subscribe(this.snapshot);
   }
 
-  select<R = any>(selector: string | SelectorFn<R>): Observable<R> {
+  select<R = any>(
+    selector: string | SelectorFn<R>,
+    disableDistinctUntilChanged: boolean = false,
+    compare?: (x: any, y: any) => boolean,
+  ): Observable<R> {
     const fn = typeof selector === 'function' ? selector : state => state[selector];
-    return this.getStore().pipe(map(fn));
+    let select = this.getStore().pipe(map(fn));
+    if (!disableDistinctUntilChanged) {
+      select = select.pipe(distinctUntilChanged(compare));
+    }
+    return select;
   }
 
   private _match(

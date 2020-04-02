@@ -1,0 +1,30 @@
+<app-loader [isLoading]="hgResolve.isResolving"></app-loader>
+<ng-container hgResolve #hgResolve="hgResolve" appEntityResolver #entityResolver="appEntityResolver">
+  <h2 mat-dialog-title>
+    <ng-template #add>New Post</ng-template>
+    <ng-template #edit>Edit Post</ng-template>
+    <ng-content *ngIf="(entityResolver.data$ | async)?.id then edit; else add;"></ng-content>
+  </h2>
+  <div mat-dialog-content>
+    <form>
+      <input type="hidden" name="id" [ngModel]="(entityResolver.data$ | async)?.id">
+      <input type="hidden" name="userId" [ngModel]="(entityResolver.data$ | async)?.userId">
+      <div class="form-group">
+        <mat-form-field>
+          <input matInput name="title" placeholder="Title" [ngModel]="(entityResolver.data$ | async)?.title"
+            name="title">
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <mat-form-field>
+          <textarea matInput name="body" placeholder="Description" [ngModel]="(entityResolver.data$ | async)?.body"
+            name="body"></textarea>
+        </mat-form-field>
+      </div>
+    </form>
+  </div>
+  <div mat-dialog-actions>
+    <button mat-button (click)="cancelHandler()">Cancel</button>
+    <button mat-button (click)="saveHandler()" cdkFocusInitial>Save</button>
+  </div>
+</ng-container>
