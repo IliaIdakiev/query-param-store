@@ -65,7 +65,6 @@ export class ListComponent implements AfterViewInit, OnDestroy {
           disableClose: true,
           width: '600px'
         });
-        this.dialogRef.beforeClosed().pipe(first()).subscribe(() => { this.postService.clearEntity(); });
       } else if (this.dialogRef) {
         this.dialogRef.close();
         this.dialogRef = null;
@@ -74,7 +73,6 @@ export class ListComponent implements AfterViewInit, OnDestroy {
   }
 
   onPageChange(data: { length: number, pageIndex: number, pageSize: number, previousPageIndex: number }) {
-    this.clear();
     this.router.navigate([this.currentURL], {
       queryParams: {
         pageSize: data.pageSize,
@@ -90,7 +88,6 @@ export class ListComponent implements AfterViewInit, OnDestroy {
       map(({ filter: filterText, userId, page, ...others }) => ({ page: 1, ...others })),
       map(appQueryBuilder)
     ).subscribe(query => {
-      this.clear();
       this.router.navigateByUrl(`${this.currentURL}${query}`);
     });
   }
@@ -104,18 +101,13 @@ export class ListComponent implements AfterViewInit, OnDestroy {
       map(appQueryBuilder)
     ).subscribe(query => {
       const navigationUrl = `${this.currentURL}${query}`;
-      this.clear();
       this.router.navigateByUrl(navigationUrl);
     });
   }
 
-  clear() {
-    this.postService.clearList();
-  }
 
   ngOnDestroy() {
     this.isAlive$.next(); this.isAlive$.complete();
-    this.clear();
   }
 
 }
