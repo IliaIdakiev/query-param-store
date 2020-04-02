@@ -3,8 +3,8 @@ import { Resolver, HG_RESOLVERS, ResolverConfig, toObservable } from 'hg-resolve
 import { IPost } from 'src/app/shared/interfaces';
 import { PostService } from '../post.service';
 import { QueryParamsStore } from 'query-params-store';
-import { Observable, asapScheduler } from 'rxjs';
-import { tap, filter as observableFilter, observeOn, startWith } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { filter as observableFilter, startWith } from 'rxjs/operators';
 
 @Directive({
   selector: '[appListResolver]',
