@@ -12,7 +12,7 @@ import {
   withLatestFrom,
   debounceTime
 } from 'rxjs/operators';
-import { PostEntityComponent } from '../post-entity/post-entity.component';
+import { UserEntityComponent } from '../user-entity/user-entity.component';
 import { RouterHelperService } from '../../shared/router-helper.service';
 import { appQueryBuilder } from '../../shared/utils';
 
@@ -25,17 +25,15 @@ export class ListComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('filterInput', { static: true }) filterInput: ElementRef;
   isAlive$: Subject<void> = new Subject<void>();
-  dialogRef: MatDialogRef<PostEntityComponent, any>;
+  dialogRef: MatDialogRef<UserEntityComponent, any>;
 
-  displayedColumns: string[] = ['id', 'title', 'userId', 'actions'];
+  displayedColumns: string[] = ['id', 'username', 'email', 'actions'];
 
   pageSize$: Observable<number>;
   filter$: Observable<string>;
   page$: Observable<number>;
 
   isDialogDisabled$ = this.queryParamsStore.select<boolean>('disableDialog');
-
-  currentURL: string;
 
   constructor(
     dialog: MatDialog,
@@ -54,10 +52,9 @@ export class ListComponent implements AfterViewInit, OnDestroy {
       withLatestFrom(queryParamsStore.store)
     ).subscribe(([{ data: { dialogId = null } }, queryParamsState]) => {
       if (dialogId && !this.dialogRef) {
-        const query = appQueryBuilder(queryParamsState);
-        this.dialogRef = dialog.open(PostEntityComponent, {
+        this.dialogRef = dialog.open(UserEntityComponent, {
           autoFocus: false,
-          data: { closeNavigationUrl: '/post/list' },
+          data: { closeNavigationUrl: '/user/list' },
           disableClose: true,
           width: '600px',
           closeOnNavigation: false

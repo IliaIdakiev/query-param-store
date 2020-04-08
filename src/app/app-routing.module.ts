@@ -6,11 +6,15 @@ const routes: IQueryParamsStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'post'
+    redirectTo: '/post'
   },
   {
     path: 'post',
     loadChildren: () => import('./post/post.module').then(mod => mod.PostModule),
+  },
+  {
+    path: 'user',
+    loadChildren: () => import('./user/user.module').then(mod => mod.UserModule),
   },
   {
     path: '**',
@@ -18,4 +22,4 @@ const routes: IQueryParamsStoreRoutes = [
   }
 ];
 
-export const AppRoutingModule = RouterModule.forRoot(routes);
+export const AppRoutingModule = RouterModule.forRoot(routes, { enableTracing: false });

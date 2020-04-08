@@ -9,11 +9,11 @@ import { NgForm } from '@angular/forms';
 import { QueryParamsStore } from 'query-params-store';
 
 @Component({
-  selector: 'app-entity',
-  templateUrl: './entity.component.html',
-  styleUrls: ['./entity.component.scss']
+  selector: 'app-post-entity',
+  templateUrl: './post-entity.component.html',
+  styleUrls: ['./post-entity.component.scss']
 })
-export class EntityComponent implements OnDestroy {
+export class PostEntityComponent implements OnDestroy {
 
   isAlive$: Subject<void> = new Subject<void>();
   completed$ = this.queryParamsStore.select<boolean>('completed');

@@ -1,0 +1,32 @@
+<app-loader [isLoading]="hgResolve.isResolving"></app-loader>
+<ng-container hgResolve #hgResolve="hgResolve" appEntityResolver #entityResolver="appEntityResolver">
+  <h2 mat-dialog-title>
+    <ng-template #add>New User</ng-template>
+    <ng-template #edit>Edit User</ng-template>
+    <ng-content *ngIf="(entityResolver.data$ | async)?.id then edit; else add;"></ng-content>
+  </h2>
+  <div mat-dialog-content>
+    <form>
+      <input type="hidden" name="id" [ngModel]="(entityResolver.data$ | async)?.id">
+      <div class="form-group">
+        <mat-form-field>
+          <input matInput name="title" placeholder="Username" [ngModel]="(entityResolver.data$ | async)?.username"
+            name="username">
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <mat-form-field>
+          <input matInput name="email" placeholder="Email" [ngModel]="(entityResolver.data$ | async)?.email"
+            name="email">
+        </mat-form-field>
+      </div>
+    </form>
+  </div>
+  <button mat-button [color]="(completed$ | async) ? 'primary' : 'warn'"
+    (click)="toggleCompleted()">{{ (completed$ | async) ? 'Activate' : 'Deactivate' }} navigation based on query
+    parameter</button>
+  <div mat-dialog-actions>
+    <button mat-button (click)="cancelHandler()">Cancel</button>
+    <button mat-button (click)="saveHandler()" cdkFocusInitial>Save</button>
+  </div>
+</ng-container>

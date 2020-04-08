@@ -1,0 +1,47 @@
+<app-loader [isLoading]="hgResolve.isResolving"></app-loader>
+<ng-container #hgResolve="hgResolve" hgResolve appListResolver [refresh]="dialogRef" #listResolver="appListResolver">
+  <div id="filter-container">
+    <div>
+      <mat-form-field>
+        <input matInput #filterInput placeholder="Title" id="filter" type="text" [value]="filter$ | async"
+          placeholder="Enter filter...">
+      </mat-form-field>
+      <button [disabled]="!(filter$ | async)" mat-raised-button (click)="clearFilter()">Clear</button>
+    </div>
+    <div>
+      <button class="disable-dialog" mat-button [color]="(isDialogDisabled$ | async) ? 'warn' : 'primary'"
+        (click)="toggleDialogDisable()">{{ (isDialogDisabled$ | async) ? 'Allow' : 'Disable' }}
+        dialog open
+        navigation
+        based on query
+        parameter</button>
+    </div>
+  </div>
+
+  <table mat-table [dataSource]="(listResolver.data$ | async)?.users" class="mat-elevation-z8">
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef> Id </th>
+      <td mat-cell *matCellDef="let user"> {{user.id}} </td>
+    </ng-container>
+    <ng-container matColumnDef="username">
+      <th mat-header-cell *matHeaderCellDef> Title </th>
+      <td mat-cell *matCellDef="let user"> {{user.username}} </td>
+    </ng-container>
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef> User Id </th>
+      <td mat-cell *matCellDef="let user"> {{user.email}} </td>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let user">
+        <a [routerLink]="['/user/list/edit', user.id]" queryParamsHandling="merge">Edit</a>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  <mat-paginator [length]="(listResolver.data$ | async)?.totalCount" [pageSize]="pageSize$ | async"
+    [pageIndex]="(page$ | async) - 1" [pageSizeOptions]="[10,20,30]" (page)="onPageChange($event)">
+  </mat-paginator>
+</ng-container>

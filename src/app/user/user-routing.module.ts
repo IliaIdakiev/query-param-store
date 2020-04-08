@@ -8,10 +8,10 @@ const routes: IQueryParamsStoreRoutes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: '/post/list'
+    redirectTo: '/user/list'
   },
   {
-    path: 'post/list',
+    path: 'list',
     component: ListComponent,
     data: {
       dialogComponentReuse: true,
@@ -46,7 +46,7 @@ const routes: IQueryParamsStoreRoutes = [
         canDeactivate: [EntityDeactivate],
         data: {
           dialogComponentReuse: true,
-          dialogId: 'edit-post',
+          dialogId: 'edit-user',
           storeConfig: {
             inherit: true
           }
@@ -56,4 +56,4 @@ const routes: IQueryParamsStoreRoutes = [
   },
 ];
 
-export const PostRoutingModule = RouterModule.forChild(routes);
+export const UserRoutingModule = RouterModule.forChild(routes);
