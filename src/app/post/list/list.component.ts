@@ -11,7 +11,8 @@ import {
   first,
   withLatestFrom,
   debounceTime,
-  filter
+  filter,
+  tap
 } from 'rxjs/operators';
 import { EntityComponent } from '../entity/entity.component';
 import { RouterHelperService } from '../../shared/router-helper.service';
@@ -43,9 +44,9 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     routeHelper: RouterHelperService,
     activatedRoute: ActivatedRoute,
     private queryParamsStore: QueryParamsStore,
-    private router: Router,
-    private postService: PostService
+    private router: Router
   ) {
+    this.queryParamsStore.store.pipe(takeUntil(this.isAlive$)).subscribe(console.log);
     this.pageSize$ = queryParamsStore.select('pageSize').pipe(shareReplay());
     this.filter$ = queryParamsStore.select('filter').pipe(shareReplay());
     this.page$ = queryParamsStore.select(state => state.page).pipe(shareReplay());
@@ -96,12 +97,8 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     fromEvent<KeyboardEvent>(this.filterInput.nativeElement, 'keyup').pipe(
       debounceTime(500),
       map(e => (e.target as HTMLInputElement).value),
-      withLatestFrom(this.queryParamsStore.store),
-      map(([text, { filter: filterText, page, ...others }]) => ({ ...others, page: 1, filter: text ? text : undefined })),
-      map(appQueryBuilder)
-    ).subscribe(query => {
-      const navigationUrl = `${this.currentURL}${query}`;
-      this.router.navigateByUrl(navigationUrl);
+    ).subscribe((f: string) => {
+      this.router.navigate([], { queryParams: { filter: f ? f : null, page: null }, queryParamsHandling: 'merge' });
     });
   }
 

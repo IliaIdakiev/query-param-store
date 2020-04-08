@@ -111,6 +111,12 @@ describe('QueryParamsStore', () => {
                   length: 6,
                   removeInvalid: true
                 },
+                pageWithLength: {
+                  value: '1;2;3',
+                  typeConvertor: Number,
+                  multi: true,
+                  separator: ';'
+                }, // multi number array with separator ';'
                 pageSizeWithAllowedValues: {
                   value: 1000,
                   allowedValues: [1, 1000]
