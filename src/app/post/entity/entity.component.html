@@ -23,6 +23,9 @@
       </div>
     </form>
   </div>
+  <button mat-button [color]="(completed$ | async) ? 'primary' : 'warn'"
+    (click)="toggleCompleted()">{{ (completed$ | async) ? 'Activate' : 'Deactivate' }} navigation based on query
+    parameter</button>
   <div mat-dialog-actions>
     <button mat-button (click)="cancelHandler()">Cancel</button>
     <button mat-button (click)="saveHandler()" cdkFocusInitial>Save</button>

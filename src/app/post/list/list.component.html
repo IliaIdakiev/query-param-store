@@ -1,11 +1,21 @@
 <app-loader [isLoading]="hgResolve.isResolving"></app-loader>
 <ng-container #hgResolve="hgResolve" hgResolve appListResolver [refresh]="dialogRef" #listResolver="appListResolver">
   <div id="filter-container">
-    <mat-form-field>
-      <input matInput #filterInput placeholder="Title" id="filter" type="text" [value]="filter$ | async"
-        placeholder="Enter filter...">
-    </mat-form-field>
-    <button [disabled]="!(filter$ | async)" mat-raised-button (click)="clearFilter()">Clear</button>
+    <div>
+      <mat-form-field>
+        <input matInput #filterInput placeholder="Title" id="filter" type="text" [value]="filter$ | async"
+          placeholder="Enter filter...">
+      </mat-form-field>
+      <button [disabled]="!(filter$ | async)" mat-raised-button (click)="clearFilter()">Clear</button>
+    </div>
+    <div>
+      <button class="disable-dialog" mat-button [color]="(isDialogDisabled$ | async) ? 'warn' : 'primary'"
+        (click)="toggleDialogDisable()">{{ (isDialogDisabled$ | async) ? 'Allow' : 'Disable' }}
+        dialog open
+        navigation
+        based on query
+        parameter</button>
+    </div>
   </div>
 
   <table mat-table [dataSource]="(listResolver.data$ | async)?.posts" class="mat-elevation-z8">

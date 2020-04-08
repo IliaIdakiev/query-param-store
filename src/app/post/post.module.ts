@@ -9,6 +9,8 @@ import { ListResolverDirective } from './-resolvers/list-resolver.directive';
 import { EntityResolverDirective } from './-resolvers/entity-resolver.directive';
 import { HGResolversModule } from 'hg-resolvers';
 import { LoaderComponent } from '../shared/loader/loader.component';
+import { EntityDeactivate } from './guards/entity.deactivate';
+import { EntityActivate } from './guards/entity.activate';
 
 @NgModule({
   declarations: [
@@ -28,6 +30,10 @@ import { LoaderComponent } from '../shared/loader/loader.component';
     MatSelectModule,
     FormsModule,
     HGResolversModule
+  ],
+  providers: [
+    EntityActivate,
+    EntityDeactivate
   ],
   entryComponents: [
     EntityComponent

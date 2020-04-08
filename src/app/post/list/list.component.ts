@@ -37,6 +37,8 @@ export class ListComponent implements AfterViewInit, OnDestroy {
   filter$: Observable<string>;
   page$: Observable<number>;
 
+  isDialogDisabled$ = this.queryParamsStore.select<boolean>('disableDialog');
+
   currentURL: string;
 
   constructor(
@@ -56,17 +58,18 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     routeHelper.routeData$.pipe(
       takeUntil(this.isAlive$),
       distinctUntilChanged(),
-      withLatestFrom(queryParamsStore.store)
-    ).subscribe(([{ data: { dialogId = null } }, queryParamsState]) => {
+      withLatestFrom(queryParamsStore.store, activatedRoute.url.pipe(map(sa => sa.map(s => s.path).join('/'))))
+    ).subscribe(([{ data: { dialogId = null } }, queryParamsState, url]) => {
       if (dialogId && !this.dialogRef) {
         const query = appQueryBuilder(queryParamsState);
-        const closeNavigationUrl = `${this.currentURL}${query}`;
         this.dialogRef = dialog.open(EntityComponent, {
-          data: { closeNavigationUrl },
+          autoFocus: false,
+          data: { closeNavigationUrl: url },
           disableClose: true,
-          width: '600px'
+          width: '600px',
+          closeOnNavigation: false
         });
-      } else if (this.dialogRef) {
+      } else if (this.dialogRef && !dialogId) {
         this.dialogRef.close();
         this.dialogRef = null;
       }
@@ -102,6 +105,16 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  toggleDialogDisable() {
+    this.isDialogDisabled$.pipe(first()).subscribe(isDialogDisabled => {
+      this.router.navigate([], {
+        queryParams: {
+          disableDialog: isDialogDisabled ? null : true, page: null
+        },
+        queryParamsHandling: 'merge'
+      });
+    });
+  }
 
   ngOnDestroy() {
     this.isAlive$.next(); this.isAlive$.complete();

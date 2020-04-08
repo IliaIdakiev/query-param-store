@@ -3,6 +3,13 @@ table {
 }
 
 #filter-container {
+  div {
+    width: 50%;
+    display: inline-block;
+    &:last-child {
+      text-align: right;
+    }
+  }
   button {
     margin-left: 20px;
   }
