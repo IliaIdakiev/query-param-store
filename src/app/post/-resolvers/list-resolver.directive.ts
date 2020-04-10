@@ -4,7 +4,7 @@ import { IPost } from 'src/app/shared/interfaces';
 import { PostService } from '../post.service';
 import { QueryParamsStore } from 'query-params-store';
 import { Observable } from 'rxjs';
-import { filter as observableFilter, startWith } from 'rxjs/operators';
+import { filter as observableFilter, startWith, distinctUntilChanged } from 'rxjs/operators';
 
 @Directive({
   selector: '[appListResolver]',
@@ -23,12 +23,14 @@ export class ListResolverDirective extends Resolver<{ posts: IPost[]; totalCount
   @Input('refresh') @toObservable refresh$: Observable<any>;
   config = ResolverConfig.AutoResolve;
 
+  selector = (name) => s => { const v = s[name]; return Array.isArray(v) ? v[0] : v; };
+
   constructor(postService: PostService, queryParamsStore: QueryParamsStore) {
     super(([page, pageSize, filter, sort]) => postService.getAll({ page, pageSize, filter, sort }), () => [
-      queryParamsStore.select('page'),
-      queryParamsStore.select('pageSize'),
-      queryParamsStore.select('filter'),
-      queryParamsStore.select('sort'),
+      queryParamsStore.select(this.selector('page')).pipe(distinctUntilChanged()),
+      queryParamsStore.select(this.selector('pageSize')).pipe(distinctUntilChanged()),
+      queryParamsStore.select(this.selector('filter')).pipe(distinctUntilChanged()),
+      queryParamsStore.select(this.selector('sort')).pipe(distinctUntilChanged()),
       this.refresh$.pipe(observableFilter(val => val === null), startWith(null))
     ]);
   }

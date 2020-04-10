@@ -23,12 +23,14 @@ export class ListResolverDirective extends Resolver<{ users: IUser[]; totalCount
   @Input('refresh') @toObservable refresh$: Observable<any>;
   config = ResolverConfig.AutoResolve;
 
+  selector = (name) => s => { const v = s[name]; return Array.isArray(v) ? v[0] : v; };
+
   constructor(userService: UserService, queryParamsStore: QueryParamsStore) {
     super(([page, pageSize, filter, sort]) => userService.getAll({ page, pageSize, filter, sort }), () => [
-      queryParamsStore.select('page'),
-      queryParamsStore.select('pageSize'),
-      queryParamsStore.select('filter'),
-      queryParamsStore.select('sort'),
+      queryParamsStore.select(this.selector('page')),
+      queryParamsStore.select(this.selector('pageSize')),
+      queryParamsStore.select(this.selector('filter')),
+      queryParamsStore.select(this.selector('sort')),
       this.refresh$.pipe(observableFilter(val => val === null), startWith(null))
     ]);
   }
