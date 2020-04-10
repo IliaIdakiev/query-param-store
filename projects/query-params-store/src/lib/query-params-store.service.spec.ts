@@ -62,42 +62,42 @@ describe('QueryParamsStore', () => {
                   multi: true,
                   separator: ';'
                 }, // multi number array with separator ';'
-                pageNumbersOrEmptyArrayWithString: {
-                  value: '',
-                  typeConvertor: Number,
-                  multi: true,
-                  separator: ';'
-                }, // multi number array or empty array from string
                 pageNumbersOrNull: {
                   value: null,
                   typeConvertor: Number,
                   multi: true,
                   separator: ';'
                 }, // multi number array or empty array from null
-                pageNumbersOrEmptyArrayWithUndefined: {
-                  value: undefined,
+                pageNumbersOrEmptyArray1: {
+                  value: '',
+                  typeConvertor: Number,
+                  multi: true,
+                  separator: ';'
+                }, // multi number array or empty array from string
+                pageNumbersOrEmptyArray2: {
+                  value: null,
                   typeConvertor: Number,
                   multi: true,
                   separator: ';'
                 }, // multi number array or empty array from undefined
-                pageStringsOrEmptyArrayWithString: {
+                pageStringsOrEmptyArray1: {
                   value: '',
                   typeConvertor: String,
                   multi: true,
                   separator: ';'
                 }, // multi string array or empty array from string
+                pageStringsOrEmptyArray2: {
+                  value: null,
+                  typeConvertor: String,
+                  multi: true,
+                  separator: ';'
+                }, // multi string array or empty array from undefined
                 pageStringsOrNull: {
                   value: null,
                   typeConvertor: String,
                   multi: true,
                   separator: ';'
                 }, // multi string array or empty array from null
-                pageStringsOrEmptyArrayWithUndefined: {
-                  value: undefined,
-                  typeConvertor: String,
-                  multi: true,
-                  separator: ';'
-                }, // multi string array or empty array from undefined
                 allowed: {
                   value: null,
                   multi: false,
@@ -129,6 +129,8 @@ describe('QueryParamsStore', () => {
         router.resetConfig(configs);
       });
 
+      // test no query params option
+
       it('should return default values for query params', (done) => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
@@ -140,12 +142,12 @@ describe('QueryParamsStore', () => {
           expect(state.stringOrNull).toEqual(null);
           expect(state.numberOrNull).toEqual(null);
           expect(state.page).toEqual([1, 2, 3]);
-          expect(state.pageNumbersOrEmptyArrayWithString).toEqual([]);
           expect(state.pageNumbersOrNull).toEqual(null);
-          expect(state.pageNumbersOrEmptyArrayWithUndefined).toEqual([]);
-          expect(state.pageStringsOrEmptyArrayWithString).toEqual([]);
+          expect(state.pageNumbersOrEmptyArray1).toEqual([]);
+          expect(state.pageNumbersOrEmptyArray2).toEqual(null);
+          expect(state.pageStringsOrEmptyArray1).toEqual([]);
+          expect(state.pageStringsOrEmptyArray2).toEqual(null);
           expect(state.pageStringsOrNull).toEqual(null);
-          expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual([]);
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
           expect(state.pageSizeWithAllowedValues).toEqual(1000),
@@ -158,7 +160,7 @@ describe('QueryParamsStore', () => {
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
         // tslint:disable-next-line:max-line-length
-        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArrayWithString=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArrayWithUndefined=10;20;30&pageStringsOrEmptyArrayWithString=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArrayWithUndefined=1;2;3&allowed=Test&openToggles=60&pageSizeWithAllowedValues=1'); });
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArray1=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArray2=10;20;30&pageStringsOrEmptyArray1=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArray2=1;2;3&allowed=Test&openToggles=60&pageSizeWithAllowedValues=1'); });
 
         service.store.subscribe(state => {
           expect(state.pageSize).toEqual(10);
@@ -166,12 +168,12 @@ describe('QueryParamsStore', () => {
           expect(state.stringOrNull).toEqual('!!!');
           expect(state.numberOrNull).toEqual(20);
           expect(state.page).toEqual([3, 4, 5]);
-          expect(state.pageNumbersOrEmptyArrayWithString).toEqual([6, 7, 8]);
+          expect(state.pageNumbersOrEmptyArray1).toEqual([6, 7, 8]);
           expect(state.pageNumbersOrNull).toEqual([3, 2, 1]);
-          expect(state.pageNumbersOrEmptyArrayWithUndefined).toEqual([10, 20, 30]);
-          expect(state.pageStringsOrEmptyArrayWithString).toEqual(['a', 'b', 'c']);
+          expect(state.pageNumbersOrEmptyArray2).toEqual([10, 20, 30]);
+          expect(state.pageStringsOrEmptyArray1).toEqual(['a', 'b', 'c']);
           expect(state.pageStringsOrNull).toEqual(['c', '1', 'e']);
-          expect(state.pageStringsOrEmptyArrayWithUndefined).toEqual(['1', '2', '3']);
+          expect(state.pageStringsOrEmptyArray2).toEqual(['1', '2', '3']);
           expect(state.allowed).toEqual('Test');
           expect(state.openToggles).toEqual([false, false, true, true, true, true]);
           expect(state.pageSizeWithAllowedValues).toEqual(1),

@@ -13,6 +13,7 @@ const queryParamMap = {
   },
   filter: (value: string) => `q=${value}`,
   userId: (value: string) => `userId=${value}`,
+  postId: (value: string) => `postId=${value}`,
 };
 
 export function apiQueryBuilder(data: IQueryData) {

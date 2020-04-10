@@ -3,4 +3,6 @@ export interface IQueryData {
   pageSize: number;
   filter: string;
   sort: string;
+  userId?: number;
+  postId?: number;
 }
