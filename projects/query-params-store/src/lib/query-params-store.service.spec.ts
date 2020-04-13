@@ -143,7 +143,10 @@ describe('QueryParamsStore', () => {
         router.resetConfig(configs);
       });
 
-      // test no query params option
+      // TODO: write test for no query params option
+      // TODO: write test for single to multi param configuration redirect 1 -> 2 and 2 -> 3
+      // TODO: write test for multi to single param configuration redirect 3 -> 2 and 2 -> 1
+
       it('should return default values for query params', (done) => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);

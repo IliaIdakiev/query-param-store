@@ -103,7 +103,7 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     this.isDialogDisabled$.pipe(first()).subscribe(isDialogDisabled => {
       this.router.navigate([], {
         queryParams: {
-          disableDialog: isDialogDisabled ? null : true, page: null
+          disableDialog: isDialogDisabled ? null : true
         },
         queryParamsHandling: 'merge'
       });

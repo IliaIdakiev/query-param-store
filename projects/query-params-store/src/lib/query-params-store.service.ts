@@ -190,67 +190,80 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       cfg.multi;
   }
 
-  private constructStore(snpsht?: ActivatedRouteSnapshot, previous = false): Observable<T> {
+  private getSnapshotData(snapshot: ActivatedRouteSnapshot) {
+    const defaultStoreConfig = { stateConfig: {}, noQueryParams: false, removeUnknown: false };
+    let storeConfig: IQueryParamsStoreConfig = snapshot.data && snapshot.data.storeConfig || defaultStoreConfig;
+    const inherit = storeConfig.inherit || false;
+
+    if (inherit) {
+      // iterate over all route data configs and merge the store configs (priority is from the bottom up)
+      storeConfig = snapshot.pathFromRoot.slice(0, -1).reduceRight((acc, curr) => {
+        const currentData = curr.data;
+        if (!currentData || !currentData.storeConfig) { return acc; }
+        const { stateConfig: accumulatedStateConfig, ...accumulatedStoreConfigOptions } = acc;
+        const { stateConfig: currentStateConfig, ...currentStoreConfigOptions } = currentData.storeConfig;
+
+        if (this.isInDebugMode) {
+          const accumulatedStateKeys = Object.keys(accumulatedStateConfig || {});
+          const currentStateKeys = Object.keys(currentStateConfig || {});
+
+          const accumulatedStoreKeys = Object.keys(accumulatedStoreConfigOptions);
+          const currentStoreKeys = Object.keys(currentStoreConfigOptions);
+
+          const storeKeysIntersection = accumulatedStoreKeys.filter(x => currentStoreKeys.includes(x));
+          const stateKeysIntersection = accumulatedStateKeys.filter(x => currentStateKeys.includes(x));
+
+          // tslint:disable-next-line:max-line-length
+          if (storeKeysIntersection.length > 0) { console.warn(`Query Params Store: parameter keys ${storeKeysIntersection} were overridden`); }
+          // tslint:disable-next-line:max-line-length
+          if (stateKeysIntersection.length > 0) { console.warn(`Query Params Store: parameter keys ${stateKeysIntersection} were overridden`); }
+        }
+
+        return {
+          ...currentStoreConfigOptions,
+          ...accumulatedStoreConfigOptions,
+          stateConfig: { ...currentStateConfig, ...accumulatedStateConfig }
+        };
+      }, storeConfig);
+    }
+
+    const noQueryParams = storeConfig.noQueryParams || false;
+    const snapshotQueryParams = snapshot.queryParams;
+
+    const stateConfig = this.parseStateConfig(storeConfig.stateConfig || {});
+    const removeUnknown = storeConfig.removeUnknown || false;
+    const caseSensitive = storeConfig.hasOwnProperty('caseSensitive') ? storeConfig.caseSensitive : true;
+
+    const allQueryParamsNames = Array.from(new Set(Object.keys(snapshotQueryParams).concat(Object.keys(stateConfig))));
+    const allQueryParams = allQueryParamsNames.reduce((acc, queryParamName) => {
+      acc[queryParamName] = snapshotQueryParams[queryParamName] || NOT_PRESENT;
+      return acc;
+    }, {});
+
+
+    return { noQueryParams, storeConfig, removeUnknown, caseSensitive, allQueryParams, stateConfig };
+  }
+
+  private constructStore(snpsht?: ActivatedRouteSnapshot): Observable<T> {
     const stream$ = (snpsht ? of(null, snpsht) : this.snapshot).pipe(
       pairwise(),
-      map(([prev, curr]) => !previous ? curr : prev),
+      // map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !this.redirectUrl || !!val),
       switchMap(s => snpsht ? [s] : this.router.events.pipe(
         // emit the store if we are in the resolve phase (the guard checks passed) or catch the case
         // if we are just chaning a query paramter in an already resolved route (watch for the NavigationEnd)
         first(e => e instanceof ResolveStart || e instanceof NavigationEnd), mapTo(s))
       ),
-      map(snapshot => {
-        const defaultStoreConfig = { stateConfig: {}, noQueryParams: false, removeUnknown: false };
-        let storeConfig: IQueryParamsStoreConfig = snapshot.data && snapshot.data.storeConfig || defaultStoreConfig;
-        const inherit = storeConfig.inherit || false;
+      map(([prevSnapshot, snapshot]) => {
+        const {
+          stateConfig,
+          noQueryParams,
+          caseSensitive,
+          removeUnknown,
+          allQueryParams
+        } = this.getSnapshotData(snapshot);
 
-        if (inherit) {
-          // iterate over all route data configs and merge the store configs (priority is from the bottom up)
-          storeConfig = snapshot.pathFromRoot.slice(0, -1).reduceRight((acc, curr) => {
-            const currentData = curr.data;
-            if (!currentData || !currentData.storeConfig) { return acc; }
-            const { stateConfig: accumulatedStateConfig, ...accumulatedStoreConfigOptions } = acc;
-            const { stateConfig: currentStateConfig, ...currentStoreConfigOptions } = currentData.storeConfig;
-
-            if (this.isInDebugMode) {
-              const accumulatedStateKeys = Object.keys(accumulatedStateConfig || {});
-              const currentStateKeys = Object.keys(currentStateConfig || {});
-
-              const accumulatedStoreKeys = Object.keys(accumulatedStoreConfigOptions);
-              const currentStoreKeys = Object.keys(currentStoreConfigOptions);
-
-              const storeKeysIntersection = accumulatedStoreKeys.filter(x => currentStoreKeys.includes(x));
-              const stateKeysIntersection = accumulatedStateKeys.filter(x => currentStateKeys.includes(x));
-
-              // tslint:disable-next-line:max-line-length
-              if (storeKeysIntersection.length > 0) { console.warn(`Query Params Store: parameter keys ${storeKeysIntersection} were overridden`); }
-              // tslint:disable-next-line:max-line-length
-              if (stateKeysIntersection.length > 0) { console.warn(`Query Params Store: parameter keys ${stateKeysIntersection} were overridden`); }
-            }
-
-            return {
-              ...currentStoreConfigOptions,
-              ...accumulatedStoreConfigOptions,
-              stateConfig: { ...currentStateConfig, ...accumulatedStateConfig }
-            };
-          }, storeConfig);
-        }
-
-        const noQueryParams = storeConfig.noQueryParams || false;
         if (noQueryParams) { this.router.navigateByUrl(this.url); return null; }
-
-
-        const stateConfig = this.parseStateConfig(storeConfig.stateConfig || {});
-        const removeUnknown = storeConfig.removeUnknown || false;
-        const caseSensitive = storeConfig.hasOwnProperty('caseSensitive') ? storeConfig.caseSensitive : true;
-
-        const snapshotQueryParams = snapshot.queryParams;
-        const allQueryParamsNames = Array.from(new Set(Object.keys(snapshotQueryParams).concat(Object.keys(stateConfig))));
-        const allQueryParams = allQueryParamsNames.reduce((acc, queryParamName) => {
-          acc[queryParamName] = snapshotQueryParams[queryParamName] || NOT_PRESENT;
-          return acc;
-        }, {});
 
         const queryParamsResult = Object.entries(allQueryParams).reduce((queryParams, [paramKey, paramValue]: [string, any]) => {
           // if we have caseSensitive: false we have to skip the NOT_PRESENT set when allQueryParams is generated
@@ -322,12 +335,20 @@ export class QueryParamsStore<T = any> implements OnDestroy {
               .map(v => this.getConvertValueResult(v, typeConvertor));
 
             const multiCount = typeof stateConfigForParam.multiCount === 'number' ?
-              stateConfigForParam.multiCount : conversionResults.length;
+              stateConfigForParam.multiCount : typeof paramConfigValue.length === 'number' ?
+                paramConfigValue.length : conversionResults.length || 0;
+
             const difference = +multiCount - conversionResults.length;
             if (difference > 0) {
               for (let i = 0; i < difference; i++) {
+                // if we have difference in the lengths of the value of the parameter then we either use the default value
+                // provided in the config for the selected index or just use a default one
+                const conversionResultsIndex = conversionResults.length + i;
+                const hasDefaultValueArrayIndex = paramConfigValue.length > conversionResultsIndex;
+
                 conversionResults.push({
-                  hasValidConversion: true, convertedValue: typeConvertor === String ? '' : typeConvertor === Number ? 0 : false
+                  hasValidConversion: true, convertedValue: hasDefaultValueArrayIndex ? paramConfigValue[i] :
+                    typeConvertor === String ? '' : typeConvertor === Number ? 0 : false
                 });
               }
             }
@@ -355,12 +376,27 @@ export class QueryParamsStore<T = any> implements OnDestroy {
             }
 
             const storeValue = conversionResults.map(r => r.convertedValue);
-            return { ...queryParams, [paramKey]: { urlValue: paramValue, storeValue } };
+            // here we also provide the difference so if it's > 0 we can correctly redirect bellow
+            return { ...queryParams, [paramKey]: { urlValue: paramValue, storeValue, difference } };
           }
 
           // Default (string, number, boolean) Value Configuration Case
           {
-            const conversionResult = this.getConvertValueResult(paramValue, typeConvertor);
+            let isValidMultiToSingle = false;
+            let conversionResult = this.getConvertValueResult(paramValue, typeConvertor);
+            if (!conversionResult.hasValidConversion) {
+              const { stateConfig: prevStateConfig, allQueryParams: allPrevQueryParams } = this.getSnapshotData(prevSnapshot);
+              const prevStateConfigForKey = prevStateConfig[paramKey];
+              if (prevStateConfigForKey && prevStateConfigForKey.multi) {
+                paramValue = allPrevQueryParams[paramKey] ?
+                  allPrevQueryParams[paramKey].split(prevStateConfig[paramKey].separator)[0] :
+                  prevStateConfig[paramKey].value[0];
+
+                conversionResult = this.getConvertValueResult(paramValue, typeConvertor);
+                isValidMultiToSingle = conversionResult.hasValidConversion;
+              }
+            }
+
             const isAllowed = allowedValues ? allowedValues.includes(conversionResult.convertedValue) : true;
             if (!conversionResult.hasValidConversion || !isAllowed) {
               if (this.isInDebugMode) {
@@ -375,19 +411,34 @@ export class QueryParamsStore<T = any> implements OnDestroy {
               return { ...queryParams, [paramKey]: defaultValue };
             }
             const storeValue = conversionResult.convertedValue;
-            return { ...queryParams, [paramKey]: { urlValue: paramValue, storeValue } };
+            // if isValidMultiToSingle is true then we need to set isNewUrlValue to true so we can change the URL bellow
+            return { ...queryParams, [paramKey]: { urlValue: paramValue, storeValue, isNewUrlValue: isValidMultiToSingle } };
           }
 
         }, {});
 
+        // Redirect if needed and send the new store
         {
-          const mustCleanUrl = !!Object.values(queryParamsResult).find((v: any) => v.urlValue === null);
+          const mustChangeUrl = !!Object.values(queryParamsResult).find(
+            (v: any) => v.urlValue === null || v.isNewUrlValue || v.difference
+          );
 
-          if (mustCleanUrl) {
-            const queryParamsStringsArray = Object.entries(queryParamsResult).reduce((acc, [key, { urlValue }]: [string, any]) => {
-              if (![null, NOT_PRESENT].includes(urlValue)) { return acc.concat(`${key}=${urlValue}`); }
-              return acc;
-            }, []);
+          if (mustChangeUrl) {
+            const queryParamsStringsArray = Object.entries(queryParamsResult).reduce(
+              (acc, [key, { urlValue, difference, storeValue, isNewUrlValue }]: [string, any]) => {
+                if (isNewUrlValue || ![null, NOT_PRESENT].includes(urlValue)) {
+                  if (difference > 0) {
+                    const currentConfig = stateConfig[key];
+                    const currentUrlValueArray = urlValue.split(currentConfig.separator);
+                    for (let i = 0; i < difference; i++) {
+                      urlValue = `${urlValue}${currentConfig.separator}${storeValue[currentUrlValueArray.length + i]}`;
+                    }
+                  }
+                  return acc.concat(`${key}=${urlValue}`);
+                }
+                return acc;
+              }, []
+            );
             const redirectUrl = `${this.url}${queryParamsStringsArray.length > 0 ? '?' + queryParamsStringsArray.join('&') : ''}`;
             this.router.navigateByUrl(redirectUrl);
             this.redirectUrl = redirectUrl;
@@ -404,7 +455,6 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }),
     ).pipe(filter(val => !!val));
 
-    if (previous) { return stream$.pipe(startWith(null as string)) as any; }
     return stream$ as any;
   }
 
