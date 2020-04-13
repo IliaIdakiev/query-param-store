@@ -43,7 +43,6 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     private queryParamsStore: QueryParamsStore,
     private router: Router
   ) {
-    this.queryParamsStore.store.pipe(takeUntil(this.isAlive$)).subscribe(console.log);
 
     this.pageSize$ = queryParamsStore.select('pageSize').pipe(map(this.getValue), shareReplay());
     this.filter$ = queryParamsStore.select('filter').pipe(map(this.getValue), shareReplay());

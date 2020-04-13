@@ -540,7 +540,7 @@ describe('QueryParamsStore', () => {
       class TestCanDectivate implements CanDeactivate<boolean> {
         // tslint:disable-next-line:max-line-length
         canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {
-          return service.canDeactivate({ completed: { match: true } }, currentState, currentRoute).pipe(tap(output));
+          return service.canDeactivate({ completed: { match: true } }, currentRoute, currentState).pipe(tap(output));
         }
       }
 

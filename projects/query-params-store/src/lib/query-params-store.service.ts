@@ -44,7 +44,6 @@ function booleanTypeConverter(val) {
 export class QueryParamsStore<T = any> implements OnDestroy {
 
   private snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
-  private skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private subscription: Subscription;
   private url: string;
   private fullUrl: string;
@@ -196,7 +195,11 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       pairwise(),
       map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !this.redirectUrl || !!val),
-      switchMap(s => snpsht ? [s] : this.router.events.pipe(first(e => e instanceof ResolveStart), mapTo(s))),
+      switchMap(s => snpsht ? [s] : this.router.events.pipe(
+        // emit the store if we are in the resolve phase (the guard checks passed) or catch the case
+        // if we are just chaning a query paramter in an already resolved route (watch for the NavigationEnd)
+        first(e => e instanceof ResolveStart || e instanceof NavigationEnd), mapTo(s))
+      ),
       map(snapshot => {
         const defaultStoreConfig = { stateConfig: {}, noQueryParams: false, removeUnknown: false };
         let storeConfig: IQueryParamsStoreConfig = snapshot.data && snapshot.data.storeConfig || defaultStoreConfig;
@@ -468,10 +471,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       throw new Error('Navigating to the same route will result into infinite loop!');
     }
     return this.constructStore(snapshot).pipe(
-      withLatestFrom(this.skip, allowedValues, this.snapshot.pipe(pairwise())),
-      tap(([, shouldSkip]) => { if (shouldSkip) { this.skip.next(false); } }),
-      filter(([, shouldSkip]) => !shouldSkip),
-      map(([queryParams, , allowedValuesObj, [prevSnapshot]]) => {
+      withLatestFrom(allowedValues),
+      map(([queryParams, allowedValuesObj]) => {
         let successfulMatch = true;
         let redirectQueryParams = {};
         for (const [name, value] of Object.entries(queryParams)) {
@@ -485,23 +486,12 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           successfulMatch = successfulMatch && isCurrentMatch;
         }
         if (!successfulMatch && typeof navigateTo === 'string') {
-          if (navigateTo === this.prevFullUrl && prevSnapshot) {
-            if (!isDeactivate) {
-              this.skip.next(true);
-              this.snapshot.next(prevSnapshot);
-            }
-          } else {
-            this.router.navigateByUrl(navigateTo);
-          }
+          if (navigateTo !== this.prevFullUrl) { this.router.navigateByUrl(navigateTo); }
         }
         return successfulMatch;
       }),
     );
   }
-
-  // match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-  //   return this._match(allowedValues);
-  // }
 
   canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: ActivatedRouteSnapshot) {
     return this._match(currentSnapshot, allowedValues, this.prevFullUrl).pipe(first());
@@ -509,8 +499,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
   canDeactivate(
     allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
-    routerSnapshot: RouterStateSnapshot,
     currentSnapshot: ActivatedRouteSnapshot,
+    routerSnapshot: RouterStateSnapshot,
   ) {
     return this._match(currentSnapshot, allowedValues, routerSnapshot.url, true).pipe(first());
   }
