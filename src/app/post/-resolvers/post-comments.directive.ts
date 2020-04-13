@@ -29,7 +29,9 @@ export class PostCommentsResolverDirective extends Resolver<{ comments: IComment
       this.postId$.pipe(filter(v => !!v), distinctUntilChanged()),
       queryParamsStore.select('page').pipe(map(v => v[1]), filter(v => v !== undefined), distinctUntilChanged()),
       queryParamsStore.select('pageSize').pipe(map(v => v[1]), filter(v => v !== undefined), distinctUntilChanged()),
-      queryParamsStore.select('filter').pipe(map(v => v[1]), filter(v => v !== undefined), distinctUntilChanged()),
+      queryParamsStore.select('filter').pipe(map(v => {
+        return v[1];
+      }), filter(v => v !== undefined), distinctUntilChanged()),
       // queryParamsStore.select('sort').pipe(map(v => v[1])),
     ]);
   }

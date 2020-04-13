@@ -61,7 +61,8 @@ export class ListComponent implements AfterViewInit, OnDestroy {
           data: { closeNavigationUrl: '/post/list' },
           disableClose: true,
           width: '600px',
-          closeOnNavigation: false
+          closeOnNavigation: false,
+          panelClass: 'scroll'
         });
       } else if (this.dialogRef && !dialogId) {
         this.dialogRef.close();

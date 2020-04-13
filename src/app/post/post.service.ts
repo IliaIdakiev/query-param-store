@@ -27,7 +27,7 @@ export class PostService {
   getAllComments(data: IQueryData) {
     const query = apiQueryBuilder(data);
     return this.http.get<IComment[]>(
-      `https://jsonplaceholder.typicode.com/posts${query}`, { observe: 'response' }).pipe(
+      `https://jsonplaceholder.typicode.com/comments${query}`, { observe: 'response' }).pipe(
         map(res => ({ comments: res.body, totalCount: +res.headers.get('x-total-count') }))
       );
   }

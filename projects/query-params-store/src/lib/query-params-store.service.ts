@@ -7,10 +7,23 @@ import {
   RoutesRecognized,
   RouterStateSnapshot,
   NavigationCancel,
-  NavigationEnd
+  NavigationEnd,
+  ResolveStart
 } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
-import { map, filter, tap, distinctUntilChanged, withLatestFrom, first, pairwise, startWith, shareReplay, switchMap, mapTo } from 'rxjs/operators';
+import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject, of } from 'rxjs';
+import {
+  map,
+  filter,
+  tap,
+  distinctUntilChanged,
+  withLatestFrom,
+  first,
+  pairwise,
+  startWith,
+  shareReplay,
+  switchMap,
+  mapTo
+} from 'rxjs/operators';
 import {
   IAllowedValuesConfig,
   IQueryParamsStoreConfig,
@@ -119,6 +132,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }
 
       const isMultiValueConfig = (configForKey as any).multi || false;
+      const multiCount = isMultiValueConfig ? (configForKey as any).count : null;
       const isBinaryBoolean = this.isBinaryBoolean({ value, typeConvertor, multi: isMultiValueConfig });
 
       if (isBinaryBoolean) {
@@ -146,6 +160,13 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         value = isBinaryBoolean ?
           value : value === '' ?
             [] : (value as string).split((configForKey as any).separator || ';');
+
+        const difference = (!multiCount || isBinaryBoolean) ? 0 : +multiCount - value.length;
+        if (difference > 0) {
+          for (let i = 0; i < difference; i++) {
+            value.push(typeConvertor === String ? '' : typeConvertor === Number ? 0 : false);
+          }
+        }
       }
 
       if (Array.isArray(value)) { value = value.map(typeConvertor); }
@@ -155,6 +176,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         typeConvertor,
         value,
         multi: isMultiValueConfig,
+        multiCount,
         separator: (configForKey as any).separator || ';'
       };
 
@@ -169,12 +191,12 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       cfg.multi;
   }
 
-  private constructStore(previous = false): Observable<T> {
-    const stream$ = this.snapshot.pipe(
+  private constructStore(snpsht?: ActivatedRouteSnapshot, previous = false): Observable<T> {
+    const stream$ = (snpsht ? of(null, snpsht) : this.snapshot).pipe(
       pairwise(),
       map(([prev, curr]) => !previous ? curr : prev),
       filter(val => !this.redirectUrl || !!val),
-      switchMap(s => this.router.events.pipe(first(e => e instanceof NavigationEnd), mapTo(s))),
+      switchMap(s => snpsht ? [s] : this.router.events.pipe(first(e => e instanceof ResolveStart), mapTo(s))),
       map(snapshot => {
         const defaultStoreConfig = { stateConfig: {}, noQueryParams: false, removeUnknown: false };
         let storeConfig: IQueryParamsStoreConfig = snapshot.data && snapshot.data.storeConfig || defaultStoreConfig;
@@ -295,6 +317,17 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           if (stateConfigForParam.multi) {
             const conversionResults = paramValue.split(stateConfigForParam.separator)
               .map(v => this.getConvertValueResult(v, typeConvertor));
+
+            const multiCount = typeof stateConfigForParam.multiCount === 'number' ?
+              stateConfigForParam.multiCount : conversionResults.length;
+            const difference = +multiCount - conversionResults.length;
+            if (difference > 0) {
+              for (let i = 0; i < difference; i++) {
+                conversionResults.push({
+                  hasValidConversion: true, convertedValue: typeConvertor === String ? '' : typeConvertor === Number ? 0 : false
+                });
+              }
+            }
 
             const checkResult = conversionResults.map(v => {
               if (!v.hasValidConversion) { return 'invalid'; }
@@ -425,6 +458,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   private _match(
+    snapshot: ActivatedRouteSnapshot,
     allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
     navigateTo?: string,
     isDeactivate = false
@@ -433,7 +467,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     if (navigateTo === this.fullUrl) {
       throw new Error('Navigating to the same route will result into infinite loop!');
     }
-    return this.store.pipe(
+    return this.constructStore(snapshot).pipe(
       withLatestFrom(this.skip, allowedValues, this.snapshot.pipe(pairwise())),
       tap(([, shouldSkip]) => { if (shouldSkip) { this.skip.next(false); } }),
       filter(([, shouldSkip]) => !shouldSkip),
@@ -465,16 +499,20 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     );
   }
 
-  match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-    return this._match(allowedValues);
+  // match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
+  //   return this._match(allowedValues);
+  // }
+
+  canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: ActivatedRouteSnapshot) {
+    return this._match(currentSnapshot, allowedValues, this.prevFullUrl).pipe(first());
   }
 
-  canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-    return this._match(allowedValues, this.prevFullUrl).pipe(first());
-  }
-
-  canDeactivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: RouterStateSnapshot) {
-    return this._match(allowedValues, currentSnapshot.url, true).pipe(first());
+  canDeactivate(
+    allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
+    routerSnapshot: RouterStateSnapshot,
+    currentSnapshot: ActivatedRouteSnapshot,
+  ) {
+    return this._match(currentSnapshot, allowedValues, routerSnapshot.url, true).pipe(first());
   }
 
   ngOnDestroy() {

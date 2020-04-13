@@ -57,8 +57,9 @@ describe('QueryParamsStore', () => {
                   multi: false
                 }, // number advanced config
                 page: {
-                  value: '1;2;3',
+                  value: '1;2',
                   typeConvertor: Number,
+                  count: 3,
                   multi: true,
                   separator: ';'
                 }, // multi number array with separator ';'
@@ -66,21 +67,31 @@ describe('QueryParamsStore', () => {
                   value: null,
                   typeConvertor: Number,
                   multi: true,
+                  count: 2,
                   separator: ';'
                 }, // multi number array or empty array from null
                 pageNumbersOrEmptyArray1: {
                   value: '',
                   typeConvertor: Number,
                   multi: true,
+                  count: 2,
                   separator: ';'
                 }, // multi number array or empty array from string
                 pageNumbersOrEmptyArray2: {
                   value: null,
                   typeConvertor: Number,
                   multi: true,
+                  count: 2,
                   separator: ';'
                 }, // multi number array or empty array from undefined
                 pageStringsOrEmptyArray1: {
+                  value: '',
+                  typeConvertor: String,
+                  count: 2,
+                  multi: true,
+                  separator: ';'
+                }, // multi string array or empty array from string
+                pageStringsOrEmptyArray3: {
                   value: '',
                   typeConvertor: String,
                   multi: true,
@@ -90,12 +101,14 @@ describe('QueryParamsStore', () => {
                   value: null,
                   typeConvertor: String,
                   multi: true,
+                  count: 2,
                   separator: ';'
                 }, // multi string array or empty array from undefined
                 pageStringsOrNull: {
                   value: null,
                   typeConvertor: String,
                   multi: true,
+                  count: 2,
                   separator: ';'
                 }, // multi string array or empty array from null
                 allowed: {
@@ -113,6 +126,7 @@ describe('QueryParamsStore', () => {
                 },
                 pageWithLength: {
                   value: '1;2;3',
+                  count: 3,
                   typeConvertor: Number,
                   multi: true,
                   separator: ';'
@@ -130,7 +144,6 @@ describe('QueryParamsStore', () => {
       });
 
       // test no query params option
-
       it('should return default values for query params', (done) => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
@@ -141,12 +154,13 @@ describe('QueryParamsStore', () => {
           expect(state.filter).toEqual('');
           expect(state.stringOrNull).toEqual(null);
           expect(state.numberOrNull).toEqual(null);
-          expect(state.page).toEqual([1, 2, 3]);
+          expect(state.page).toEqual([1, 2, 0]);
           expect(state.pageNumbersOrNull).toEqual(null);
-          expect(state.pageNumbersOrEmptyArray1).toEqual([]);
+          expect(state.pageNumbersOrEmptyArray1).toEqual([0, 0]);
           expect(state.pageNumbersOrEmptyArray2).toEqual(null);
-          expect(state.pageStringsOrEmptyArray1).toEqual([]);
+          expect(state.pageStringsOrEmptyArray1).toEqual(['', '']);
           expect(state.pageStringsOrEmptyArray2).toEqual(null);
+          expect(state.pageStringsOrEmptyArray3).toEqual([]);
           expect(state.pageStringsOrNull).toEqual(null);
           expect(state.allowed).toEqual(null);
           expect(state.openToggles).toEqual([false, false, false, false, false, false]);
@@ -160,15 +174,15 @@ describe('QueryParamsStore', () => {
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
         // tslint:disable-next-line:max-line-length
-        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4;5&pageNumbersOrEmptyArray1=6;7;8&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArray2=10;20;30&pageStringsOrEmptyArray1=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArray2=1;2;3&allowed=Test&openToggles=60&pageSizeWithAllowedValues=1'); });
+        ngZone.run(() => { router.navigateByUrl('/?pageSize=10&filter=some%20random%20string&stringOrNull=!!!&numberOrNull=20&page=3;4&pageNumbersOrEmptyArray1=6;7&pageNumbersOrNull=3;2;1&pageNumbersOrEmptyArray2=10;20;30&pageStringsOrEmptyArray1=a;b;c&pageStringsOrNull=c;1;e&pageStringsOrEmptyArray2=1;2;3&allowed=Test&openToggles=60&pageSizeWithAllowedValues=1'); });
 
         service.store.subscribe(state => {
           expect(state.pageSize).toEqual(10);
           expect(state.filter).toEqual('some random string');
           expect(state.stringOrNull).toEqual('!!!');
           expect(state.numberOrNull).toEqual(20);
-          expect(state.page).toEqual([3, 4, 5]);
-          expect(state.pageNumbersOrEmptyArray1).toEqual([6, 7, 8]);
+          expect(state.page).toEqual([3, 4, 0]);
+          expect(state.pageNumbersOrEmptyArray1).toEqual([6, 7]);
           expect(state.pageNumbersOrNull).toEqual([3, 2, 1]);
           expect(state.pageNumbersOrEmptyArray2).toEqual([10, 20, 30]);
           expect(state.pageStringsOrEmptyArray1).toEqual(['a', 'b', 'c']);
@@ -445,7 +459,7 @@ describe('QueryParamsStore', () => {
       class TestComponent { }
       class TestCanActivate implements CanActivate {
         canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-          return service.canActivate({ role: { match: [null, 'ADMIN'] } }).pipe(tap(output));
+          return service.canActivate({ role: { match: [null, 'ADMIN'] } }, route).pipe(tap(output));
         }
       }
 
@@ -526,7 +540,7 @@ describe('QueryParamsStore', () => {
       class TestCanDectivate implements CanDeactivate<boolean> {
         // tslint:disable-next-line:max-line-length
         canDeactivate(component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot) {
-          return service.canDeactivate({ completed: { match: true } }, currentState).pipe(tap(output));
+          return service.canDeactivate({ completed: { match: true } }, currentState, currentRoute).pipe(tap(output));
         }
       }
 
