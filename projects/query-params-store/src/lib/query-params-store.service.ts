@@ -114,7 +114,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
       if (!isObjectConfig) {
         // the case when the property is just a value (page: 1 or filter: 'something')
-        acc[key] = { value: configForKey, typeConvertor, multi: false };
+        acc[key] = { value: configForKey, originalValue: configForKey, typeConvertor, multi: false };
         return acc;
       }
 
@@ -125,6 +125,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }
 
       let value = (configForKey as any).value;
+      const originalValue = value;
 
       if (!['number', 'string', 'boolean'].includes(typeof value) && value !== null) {
         // value is not in the supported type => remove invalid configuration
@@ -178,6 +179,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       acc[key] = {
         ...(configForKey as any),
         typeConvertor,
+        originalValue,
         value,
         multi: isMultiValueConfig,
         multiCount,
@@ -298,9 +300,9 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           }
 
           const typeConvertor = stateConfigForParam.typeConvertor;
-          const value = paramValue !== NOT_PRESENT ? +paramValue : NaN;
+          // const value = paramValue !== NOT_PRESENT ? +paramValue : NaN;
           const isBinaryBoolean = this.isBinaryBoolean({
-            value: isNaN(value) ? paramValue : value,
+            value: stateConfigForParam.originalValue,
             multi: stateConfigForParam.multi,
             typeConvertor
           });
@@ -317,6 +319,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
               console.warn(`Query Params Store: Allowed values can't be used with binary boolean values!`);
             }
             const removeInvalid = stateConfigForParam.removeInvalid;
+            const isFalseAsString = paramValue === 'false';
+            const isTrueAsString = paramValue === 'true';
+            const isBooleanAsString = isFalseAsString || isTrueAsString;
+            paramValue = isFalseAsString ? 0 : isTrueAsString ? 1 : paramValue;
             const binaryBooleanConversionResult = this.getConvertBinaryBooleanResult(paramValue, stateConfigLength);
             const { binaryBooleanResult, isConvertedCorrectly, isOverflowing } = binaryBooleanConversionResult;
 
@@ -335,7 +341,14 @@ export class QueryParamsStore<T = any> implements OnDestroy {
             }
 
 
-            return { ...queryParams, [paramKey]: { storeValue: binaryBooleanResult.map(r => r.convertedValue), urlValue: paramValue } };
+            return {
+              ...queryParams,
+              [paramKey]: {
+                storeValue: binaryBooleanResult.map(r => r.convertedValue),
+                urlValue: paramValue,
+                isNewUrlValue: isBooleanAsString
+              }
+            };
           }
 
           // const isMultiToMultiParamTransition = !!(stateConfigForParam.multi && prevSnapshot && prevSnapshot.data
@@ -356,7 +369,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
               stateConfigForParam.multiCount : paramConfigValue && typeof paramConfigValue.length === 'number' ?
                 paramConfigValue.length : conversionResults.length || 0;
 
-            const difference = +multiCount - conversionResults.length;
+            const difference = isBinaryBoolean ? 0 : +multiCount - conversionResults.length;
             if (difference > 0) {
               for (let i = 0; i < difference; i++) {
                 // if we have difference in the lengths of the value of the parameter then we either use the default value
@@ -467,7 +480,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                     urlValue = currentConfig.multi ? storeValue.join(separator) : storeValue;
                     difference = 0;
                   }
-                  if (difference !== 0) {
+                  if (typeof difference === 'number' && difference !== 0) {
                     const currentUrlValueArray = urlValue.split(separator);
                     if (difference > 0) {
                       for (let i = 0; i < difference; i++) {

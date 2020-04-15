@@ -657,6 +657,362 @@ describe('QueryParamsStore', () => {
       });
     });
 
+    describe('multi(BinaryBoolean/6) -> multi(BinaryBoolean/10) / multi(BinaryBoolean/10) -> multi(BinaryBoolean/6)', () => {
+      beforeEach(() => {
+        router = TestBed.get(Router);
+
+        class TestComponent { }
+        const configs: IQueryParamsStoreRoutes = [{
+          path: '',
+          pathMatch: 'full',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: {
+                  typeConvertor: Boolean,
+                  multi: true,
+                  value: 0,
+                  length: 6,
+                  removeInvalid: true
+                },
+              }
+            }
+          }
+        }, {
+          path: 'test',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: {
+                  typeConvertor: Boolean,
+                  multi: true,
+                  value: 2,
+                  length: 10,
+                  removeInvalid: true
+                },
+              }
+            }
+          }
+        }];
+
+        router.resetConfig(configs);
+      });
+
+      it('should redirect a single(BinaryBoolean) to single(BinaryBoolean) param configuration', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('?openToggles=4');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=4'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/?openToggles=4');
+          expect(currentEvent.url).toEqual('/test?openToggles=4');
+          expect(initialState.openToggles).toEqual([false, false, true, false, false, false]);
+          expect(currentState.openToggles).toEqual([false, false, true, false, false, false, false, false, false, false]);
+
+          done();
+        }, console.error);
+      });
+
+      it('should redirect a single(BinaryBoolean) to single(BinaryBoolean) param configuration', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/test?openToggles=4');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/?openToggles=4'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/test?openToggles=4');
+          expect(currentEvent.url).toEqual('/?openToggles=4');
+          expect(initialState.openToggles).toEqual([false, false, true, false, false, false, false, false, false, false]);
+          expect(currentState.openToggles).toEqual([false, false, true, false, false, false]);
+
+          done();
+        }, console.error);
+      });
+    });
+
+    describe('multi(BinaryBoolean/6) -> single(String) / single(String) -> multi(BinaryBoolean/6)', () => {
+      beforeEach(() => {
+        router = TestBed.get(Router);
+
+        class TestComponent { }
+        const configs: IQueryParamsStoreRoutes = [{
+          path: '',
+          pathMatch: 'full',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: '1',
+              }
+            }
+          }
+        }, {
+          path: 'test',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: {
+                  typeConvertor: Boolean,
+                  multi: true,
+                  value: 2,
+                  length: 6,
+                  removeInvalid: true
+                },
+              }
+            }
+          }
+        }];
+
+        router.resetConfig(configs);
+      });
+
+      it('multi(BinaryBoolean/6) -> single(String)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/test?openToggles=4');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?openToggles=4'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/test?openToggles=4');
+          expect(currentEvent.url).toEqual('/?openToggles=4');
+          expect(initialState.openToggles).toEqual([false, false, true, false, false, false]);
+          expect(currentState.openToggles).toEqual('4');
+
+          done();
+        }, console.error);
+      });
+
+      it('single(String) -> multi(BinaryBoolean/6)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/?openToggles=4');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=4'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/?openToggles=4');
+          expect(currentEvent.url).toEqual('/test?openToggles=4');
+          expect(initialState.openToggles).toEqual('4');
+          expect(currentState.openToggles).toEqual([false, false, true, false, false, false]);
+
+          done();
+        }, console.error);
+      });
+    });
+
+    describe('multi(BinaryBoolean/6) -> single(Boolean) / single(Boolean) -> multi(BinaryBoolean/6)', () => {
+      beforeEach(() => {
+        router = TestBed.get(Router);
+
+        class TestComponent { }
+        const configs: IQueryParamsStoreRoutes = [{
+          path: '',
+          pathMatch: 'full',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: true,
+              }
+            }
+          }
+        }, {
+          path: 'test',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: {
+                  typeConvertor: Boolean,
+                  multi: true,
+                  value: 2,
+                  length: 6,
+                  removeInvalid: true
+                },
+              }
+            }
+          }
+        }];
+
+        router.resetConfig(configs);
+      });
+
+      it('multi(BinaryBoolean/6) -> single(Boolean)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/test?openToggles=4');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?openToggles=4'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/test?openToggles=4');
+          expect(currentEvent.url).toEqual('/?openToggles=true');
+          expect(initialState.openToggles).toEqual([false, false, true, false, false, false]);
+          expect(currentState.openToggles).toEqual(true);
+
+          done();
+        }, console.error);
+      });
+
+      it('single(Boolean) -> multi(BinaryBoolean/6) (1)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/?openToggles=false');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=false'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/?openToggles=false');
+          expect(currentEvent.url).toEqual('/test?openToggles=0');
+          expect(initialState.openToggles).toEqual(false);
+          expect(currentState.openToggles).toEqual([false, false, false, false, false, false]);
+
+          done();
+        }, console.error);
+      });
+
+      it('single(Boolean) -> multi(BinaryBoolean/6) (2)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/?openToggles=true');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=true'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/?openToggles=true');
+          expect(currentEvent.url).toEqual('/test?openToggles=1');
+          expect(initialState.openToggles).toEqual(true);
+          expect(currentState.openToggles).toEqual([true, false, false, false, false, false]);
+
+          done();
+        }, console.error);
+      });
+    });
+
+    describe('multi(BinaryBoolean/6) -> single(Number) / single(Number) -> multi(BinaryBoolean/6)', () => {
+      beforeEach(() => {
+        router = TestBed.get(Router);
+
+        class TestComponent { }
+        const configs: IQueryParamsStoreRoutes = [{
+          path: '',
+          pathMatch: 'full',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: 1,
+              }
+            }
+          }
+        }, {
+          path: 'test',
+          component: TestComponent,
+          data: {
+            storeConfig: {
+              stateConfig: {
+                openToggles: {
+                  typeConvertor: Boolean,
+                  multi: true,
+                  value: 2,
+                  length: 6,
+                  removeInvalid: true
+                },
+              }
+            }
+          }
+        }];
+
+        router.resetConfig(configs);
+      });
+
+      it('multi(BinaryBoolean/6) -> single(Number)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/test?openToggles=4');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?openToggles=4'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/test?openToggles=4');
+          expect(currentEvent.url).toEqual('/?openToggles=4');
+          expect(initialState.openToggles).toEqual([false, false, true, false, false, false]);
+          expect(currentState.openToggles).toEqual(4);
+
+          done();
+        }, console.error);
+      });
+
+      it('single(Number) -> multi(BinaryBoolean/6) (1)', done => {
+        const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+        const ngZone: NgZone = TestBed.get(NgZone);
+        router.initialNavigation();
+        router.navigateByUrl('/?openToggles=6');
+
+        Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=6'); }); });
+
+        zip(
+          service.store.pipe(pairwise()),
+          router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd), pairwise())
+        ).pipe(first()).subscribe(([[initialState, currentState], [initialEvent, currentEvent]]) => {
+
+          expect(initialEvent.url).toEqual('/?openToggles=6');
+          expect(currentEvent.url).toEqual('/test?openToggles=6');
+          expect(initialState.openToggles).toEqual(6);
+          expect(currentState.openToggles).toEqual([false, true, true, false, false, false]);
+
+          done();
+        }, console.error);
+      });
+    });
+
     describe('multi(2/Number) -> single(Number) / single(Number) -> multi(2/Number) transitions', () => {
 
       beforeEach(() => {
@@ -701,7 +1057,7 @@ describe('QueryParamsStore', () => {
         router.resetConfig(configs);
       });
 
-      it('should redirect a single to multi param configuration', done => {
+      it('multi(BinaryBoolean/6) -> multi(BinaryBoolean/10)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.initialNavigation();
@@ -724,7 +1080,7 @@ describe('QueryParamsStore', () => {
         }, console.error);
       });
 
-      it('should redirect multi param configuration to single', done => {
+      it('/ multi(BinaryBoolean/10) -> multi(BinaryBoolean/6)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.initialNavigation();
