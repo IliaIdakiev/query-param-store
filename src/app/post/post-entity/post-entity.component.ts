@@ -43,7 +43,7 @@ export class PostEntityComponent implements OnDestroy {
 
   toggleCompleted() {
     this.queryParamsStore.select('completed').pipe(first()).subscribe(completed => {
-      this.router.navigate([], { queryParams: { completed: completed ? null : false }, queryParamsHandling: 'merge' });
+      this.router.navigate([], { queryParams: { completed: completed ? false : null }, queryParamsHandling: 'merge' });
     });
   }
 

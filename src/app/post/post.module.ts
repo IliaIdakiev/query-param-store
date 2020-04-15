@@ -12,16 +12,17 @@ import { EntityDeactivate } from './guards/entity.deactivate';
 import { EntityActivate } from './guards/entity.activate';
 import { CommentsComponent } from './comments/comments.component';
 import { SharedModule } from '../shared/shared.module';
+import { PostCommentsResolverDirective } from './-resolvers/post-comments.directive';
 // import { PostCommentsDirective } from './-resolvers/post-comments.directive';
 
 @NgModule({
   declarations: [
     ListComponent,
     PostEntityComponent,
+    CommentsComponent,
     ListResolverDirective,
     EntityResolverDirective,
-    CommentsComponent,
-    // PostCommentsDirective
+    PostCommentsResolverDirective
   ],
   imports: [
     PostRoutingModule,

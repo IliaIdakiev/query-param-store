@@ -15,6 +15,6 @@ export class EntityDeactivate implements CanDeactivate<PostEntityComponent> {
     currentState: RouterStateSnapshot,
     nextState?: RouterStateSnapshot
   ) {
-    return this.queryParamsStore.canDeactivate({ completed: { match: [null, true] } }, currentState);
+    return this.queryParamsStore.canDeactivate({ completed: { match: [null, true] } }, currentRoute, currentState);
   }
 }

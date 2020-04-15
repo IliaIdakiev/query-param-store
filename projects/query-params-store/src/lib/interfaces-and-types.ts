@@ -1,14 +1,13 @@
 import { Route } from '@angular/router';
 import { Observable } from 'rxjs';
 
+export type IStateConfig<T> = { [k in keyof T]: QueryParamsStoreDefaultValue };
 export interface IQueryParamsStoreConfig<T = any> {
   noQueryParams?: boolean;
   removeUnknown?: boolean;
   caseSensitive?: boolean;
   inherit?: boolean;
-  stateConfig?: {
-    [k in keyof T]: QueryParamsStoreDefaultValue;
-  };
+  stateConfig?: IStateConfig<T>;
 }
 
 export interface IQueryParamsStoreData<T = any> {
@@ -28,6 +27,7 @@ export type QueryParamsStoreDefaultGenericValue = string | number | boolean | {
 export type QueryParamsStoreDefaultMultiValue = string | number | boolean | {
   value: string,
   multi: true,
+  count?: number,
   typeConvertor: StringConstructor | NumberConstructor | BooleanConstructor;
   separator: string,
   allowedValues?: (null | undefined | string | number | boolean)[]

@@ -7,197 +7,518 @@ import {
   RoutesRecognized,
   RouterStateSnapshot,
   NavigationCancel,
-  NavigationEnd
+  NavigationEnd,
+  ResolveStart
 } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject } from 'rxjs';
-import { map, filter, tap, distinctUntilChanged, withLatestFrom, first, pairwise, startWith } from 'rxjs/operators';
-import { IQueryParamsStoreData, IAllowedValuesConfig, QueryParamsStoreDefaultMultiBooleanBinaryValue } from './interfaces-and-types';
-import { parseBinaryBoolean } from './utils';
+import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject, of } from 'rxjs';
+import {
+  map,
+  filter,
+  tap,
+  distinctUntilChanged,
+  withLatestFrom,
+  first,
+  pairwise,
+  startWith,
+  shareReplay,
+  switchMap,
+  mapTo
+} from 'rxjs/operators';
+import {
+  IAllowedValuesConfig,
+  IQueryParamsStoreConfig,
+  IStateConfig,
+  QueryParamsStoreDefaultValue
+} from './interfaces-and-types';
 
 type SelectorFn<T> = (a: any) => T;
+const NOT_PRESENT = Symbol('NOT_PRESENT');
+
+function booleanTypeConverter(val) {
+  if (['true', 1, '1', true].includes(val)) { return true; }
+  if (['false', 0, '0', false].includes(val)) { return false; }
+  return Boolean(val);
+}
 
 @Injectable()
 export class QueryParamsStore<T = any> implements OnDestroy {
 
   private snapshot: ReplaySubject<ActivatedRouteSnapshot> = new ReplaySubject<ActivatedRouteSnapshot>(2);
-  private skip: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private subscription: Subscription;
   private url: string;
   private fullUrl: string;
   private prevFullUrl: string;
   private redirectUrl: string;
 
-  get store() {
-    return this.getStore();
+  private isInDebugMode = true;
+
+  store: Observable<T>;
+
+  private getConvertBinaryBooleanResult(value: any, stateConfigLength: number) {
+    value = +value;
+    if (isNaN(value)) { return { isConvertedCorrectly: false }; }
+
+    const binaryBooleanStringArray = value.toString(2).split('');
+    const isOverflowing = binaryBooleanStringArray.length > stateConfigLength;
+    let binaryBooleanResult = binaryBooleanStringArray.slice(0, stateConfigLength).map(val => `${val === '1'}`).reverse();
+
+    if (binaryBooleanResult.length < stateConfigLength) {
+      binaryBooleanResult = binaryBooleanResult.concat(new Array(stateConfigLength - binaryBooleanResult.length).fill('false'));
+    }
+
+    binaryBooleanResult = binaryBooleanResult.map(v => this.getConvertValueResult(v, Boolean));
+
+    return { binaryBooleanResult, isConvertedCorrectly: true, isOverflowing };
   }
 
-  get prevStore() {
-    return this.getStore(true);
+  private getConvertValueResult(value, typeConvertor) {
+    const isTypeConverterBoolean = typeConvertor === Boolean || typeConvertor === booleanTypeConverter;
+    const isBoolean = ['true', 'false'].includes(value) && isTypeConverterBoolean;
+    const convertedValue = typeConvertor === String && typeof value === 'string' ? value :
+      typeConvertor(value === 'true' ? 1 : value === 'false' ? 0 : value);
+    const isValidNumber = typeConvertor === Number && !Number.isNaN(convertedValue);
+    const isValidString = typeConvertor === String && typeof convertedValue === 'string';
+    const isValidBoolean = isTypeConverterBoolean && typeof convertedValue === 'boolean';
+
+    const hasValidConversion = isValidNumber || isValidString || isValidBoolean;
+    return {
+      hasValidConversion,
+      convertedValue,
+      invalidRawConversion: (isTypeConverterBoolean && !isBoolean || typeConvertor === Number && isNaN(typeConvertor(value)))
+    };
   }
 
-  private getStore(previous = false): Observable<T> {
-    const stream$ = this.snapshot.pipe(
-      pairwise(),
-      map(([prev, curr]) => !previous ? curr : prev),
-      filter(val => !!val),
-      map(snapshot => {
-        const data: IQueryParamsStoreData = snapshot.data ||
-          { storeConfig: { stateConfig: {}, noQueryParams: false, removeUnknown: false } };
+  private getTypeConverter(stateConfig: any) {
+    if (stateConfig.typeConvertor) {
+      return stateConfig.typeConvertor === Boolean ? booleanTypeConverter : stateConfig.typeConvertor;
+    }
+    const stateConfigValueType = typeof (stateConfig.value ? stateConfig.value : stateConfig);
+    if (stateConfigValueType === 'number') { return Number; }
+    if (stateConfigValueType === 'boolean') { return booleanTypeConverter; }
+    return String;
+  }
 
-        if (data.storeConfig && data.storeConfig.noQueryParams) {
-          this.router.navigateByUrl(this.url);
-          return null;
+  private parseStateConfig<A = any>(config: IStateConfig<A>) {
+    return Object.entries(config).reduce((acc, [key, configForKey]: [string, QueryParamsStoreDefaultValue]) => {
+
+      if (configForKey === null || Array.isArray(configForKey)) {
+        // remove invalid configuration
+        if (this.isInDebugMode) {
+          console.warn(`Query Params Store: Invalid configuration for parameter key: ${key}! (nulls or arrays are not supported)`);
+        }
+        return acc;
+      }
+
+      const typeConvertor = this.getTypeConverter(configForKey);
+      const isObjectConfig = typeof configForKey === 'object';
+
+      if (!isObjectConfig) {
+        // the case when the property is just a value (page: 1 or filter: 'something')
+        acc[key] = { value: configForKey, originalValue: configForKey, typeConvertor, multi: false };
+        return acc;
+      }
+
+      if (!configForKey.hasOwnProperty('value')) {
+        // missing the value property => remove invalid configuration
+        if (this.isInDebugMode) { console.warn(`Query Params Store: Invalid configuration for parameter key ${key}! (value is missing)`); }
+        return acc;
+      }
+
+      let value = (configForKey as any).value;
+      const originalValue = value;
+
+      if (!['number', 'string', 'boolean'].includes(typeof value) && value !== null) {
+        // value is not in the supported type => remove invalid configuration
+        if (this.isInDebugMode) {
+          // tslint:disable-next-line:max-line-length
+          console.warn(`Query Params Store: Invalid value configuration forparameter key ${key}! (value can be number, string, boolean or null)`);
+        }
+        return acc;
+      }
+
+      const isMultiValueConfig = (configForKey as any).multi || false;
+      const multiCount = isMultiValueConfig ? (configForKey as any).count : null;
+      const isBinaryBoolean = this.isBinaryBoolean({ value, typeConvertor, multi: isMultiValueConfig });
+
+      if (isBinaryBoolean) {
+        if (!configForKey.hasOwnProperty('length')) {
+          // missing the length property => remove invalid configuration
+          // tslint:disable-next-line:max-line-length
+          if (this.isInDebugMode) { console.warn(`Query Params Store: Invalid configuration for parameter key ${key}! (length is missing)`); }
+          return acc;
         }
 
+        const configForKeyLength = +(configForKey as any).length;
+        value = value.toString(2).split('').slice(0, configForKeyLength).map(val => `${val === '1'}`).reverse();
+
+        if (value.length < configForKeyLength) {
+          value = value.concat(new Array(configForKeyLength - value.length).fill('false'));
+        }
+      } else if (isMultiValueConfig && value !== null) {
+        if (typeof value !== 'string' && !isBinaryBoolean) {
+          // value should be a string and if we need multiple values we should use the given separator
+          // tslint:disable-next-line:max-line-length
+          if (this.isInDebugMode) { console.warn(`Query Params Store: Invalid configuration for parameter key ${key}! (value should be a string)`); }
+          return acc;
+        }
+
+        value = isBinaryBoolean ?
+          value : value === '' ?
+            [] : (value as string).split((configForKey as any).separator || ';');
+
+        const difference = (!multiCount || isBinaryBoolean) ? 0 : +multiCount - value.length;
+        if (difference > 0) {
+          for (let i = 0; i < difference; i++) {
+            value.push(typeConvertor === String ? '' : typeConvertor === Number ? 0 : false);
+          }
+        }
+      }
+
+      if (Array.isArray(value)) { value = value.map(typeConvertor); }
+
+      acc[key] = {
+        ...(configForKey as any),
+        typeConvertor,
+        originalValue,
+        value,
+        multi: isMultiValueConfig,
+        multiCount,
+        separator: (configForKey as any).separator || ';'
+      };
+
+      return acc;
+    }, {});
+  }
+
+  private isBinaryBoolean(cfg: any) {
+    return cfg.multi && typeof cfg.value === 'number' &&
+      (cfg.typeConvertor === Boolean || cfg.typeConvertor === booleanTypeConverter);
+  }
+
+  private getSnapshotData(snapshot: ActivatedRouteSnapshot) {
+    const defaultStoreConfig = { stateConfig: {}, noQueryParams: false, removeUnknown: false };
+    let storeConfig: IQueryParamsStoreConfig = snapshot.data && snapshot.data.storeConfig || defaultStoreConfig;
+    const inherit = storeConfig.inherit || false;
+
+    if (inherit) {
+      // iterate over all route data configs and merge the store configs (priority is from the bottom up)
+      storeConfig = snapshot.pathFromRoot.slice(0, -1).reduceRight((acc, curr) => {
+        const currentData = curr.data;
+        if (!currentData || !currentData.storeConfig) { return acc; }
+        const { stateConfig: accumulatedStateConfig, ...accumulatedStoreConfigOptions } = acc;
+        const { stateConfig: currentStateConfig, ...currentStoreConfigOptions } = currentData.storeConfig;
+
+        if (this.isInDebugMode) {
+          const accumulatedStateKeys = Object.keys(accumulatedStateConfig || {});
+          const currentStateKeys = Object.keys(currentStateConfig || {});
+
+          const accumulatedStoreKeys = Object.keys(accumulatedStoreConfigOptions);
+          const currentStoreKeys = Object.keys(currentStoreConfigOptions);
+
+          const storeKeysIntersection = accumulatedStoreKeys.filter(x => currentStoreKeys.includes(x));
+          const stateKeysIntersection = accumulatedStateKeys.filter(x => currentStateKeys.includes(x));
+
+          // tslint:disable-next-line:max-line-length
+          if (storeKeysIntersection.length > 0) { console.warn(`Query Params Store: parameter keys ${storeKeysIntersection} were overridden`); }
+          // tslint:disable-next-line:max-line-length
+          if (stateKeysIntersection.length > 0) { console.warn(`Query Params Store: parameter keys ${stateKeysIntersection} were overridden`); }
+        }
+
+        return {
+          ...currentStoreConfigOptions,
+          ...accumulatedStoreConfigOptions,
+          stateConfig: { ...currentStateConfig, ...accumulatedStateConfig }
+        };
+      }, storeConfig);
+    }
+
+    const noQueryParams = storeConfig.noQueryParams || false;
+    const snapshotQueryParams = snapshot.queryParams;
+
+    const stateConfig = this.parseStateConfig(storeConfig.stateConfig || {});
+    const removeUnknown = storeConfig.removeUnknown || false;
+    const caseSensitive = storeConfig.hasOwnProperty('caseSensitive') ? storeConfig.caseSensitive : true;
+
+    const allQueryParamsNames = Array.from(new Set(Object.keys(snapshotQueryParams).concat(Object.keys(stateConfig))));
+    const allQueryParams = allQueryParamsNames.reduce((acc, queryParamName) => {
+      acc[queryParamName] = snapshotQueryParams[queryParamName] || NOT_PRESENT;
+      return acc;
+    }, {});
+
+
+    return { noQueryParams, storeConfig, removeUnknown, caseSensitive, allQueryParams, stateConfig };
+  }
+
+  private constructStore(snpsht?: ActivatedRouteSnapshot): Observable<T> {
+    const stream$ = (snpsht ? of(null, snpsht) : this.snapshot).pipe(
+      pairwise(),
+      filter(val => !this.redirectUrl || !!val[1]),
+      switchMap(s => snpsht ? [s] : this.router.events.pipe(
+        // emit the store if we are in the resolve phase (the guard checks passed) or catch the case
+        // if we are just chaning a query paramter in an already resolved route (watch for the NavigationEnd)
+        first(e => e instanceof ResolveStart || e instanceof NavigationEnd), mapTo(s)),
+
+      ),
+      map(([prevSnapshot, snapshot]) => {
+        if (!snapshot.data) { return {}; }
         const {
-          stateConfig = {},
-          noQueryParams = false,
-          removeUnknown = false,
-          inherit = true,
-          caseSensitive = true
-        } = data.storeConfig || {};
+          stateConfig,
+          noQueryParams,
+          caseSensitive,
+          removeUnknown,
+          allQueryParams
+        } = this.getSnapshotData(snapshot);
 
-        const allstateConfig = inherit ? snapshot.pathFromRoot.reduce((acc, curr) => {
-          const currData = curr.data;
-          if (!currData || !currData.storeConfig) { return acc; }
-          return { ...acc, ...(currData.storeConfig.stateConfig || {}) };
-        }, stateConfig) : stateConfig;
+        if (noQueryParams && Object.keys(snapshot.queryParams).length !== 0) { this.router.navigateByUrl(this.url); return null; }
 
-        let supportedKeys = Object.keys(allstateConfig);
+        const queryParamsResult = Object.entries(allQueryParams).reduce((queryParams, [paramKey, paramValue]: [string, any]) => {
+          // if we have caseSensitive: false we have to skip the NOT_PRESENT set when allQueryParams is generated
+          if (paramValue === NOT_PRESENT && queryParams[paramKey]) { return queryParams; }
 
-        const keyTypeConverter = supportedKeys.reduce((acc, key) => {
-          const defaultValue = allstateConfig[key];
-          if (defaultValue === null || defaultValue === undefined) {
-            console.warn(`Query Params Store > Invalid value '${defaultValue}' for key '${key}'`);
-            return acc;
+          let stateConfigForParam = stateConfig[paramKey] as any;
+          paramValue = paramValue === NOT_PRESENT ? NOT_PRESENT : decodeURIComponent(paramValue);
+
+          if (!stateConfigForParam && caseSensitive === false) {
+            const stateConfigKeys = Object.keys(stateConfig);
+            paramKey = stateConfigKeys.find(objKey => paramKey.toLowerCase() === objKey.toLowerCase());
+            stateConfigForParam = stateConfig[paramKey];
           }
 
-          acc[key] = defaultValue.typeConvertor ||
-            (typeof (defaultValue && defaultValue.value || defaultValue) === 'number' ? Number :
-              typeof (defaultValue && defaultValue.value || defaultValue) === 'boolean' ? Boolean : String);
-          return acc;
-        }, {});
+          if (removeUnknown && !stateConfigForParam) {
+            if (this.isInDebugMode) { console.warn(`Query Params Store: removing parameter key: ${paramKey} because it's unknown!`); }
+            return { ...queryParams, [paramKey]: { storeValue: null, urlValue: null } };
+          } else if (!stateConfigForParam) { return { ...queryParams, [paramKey]: { urlValue: paramValue, storeValue: paramValue } }; }
 
-        supportedKeys = Object.keys(keyTypeConverter);
+          const hasAllowedValuesProperty = stateConfigForParam.hasOwnProperty('allowedValues');
+          const isAllowedValuesAnArray = Array.isArray(stateConfigForParam.allowedValues);
 
-        const flatstateConfig = supportedKeys.reduce((acc, key) => {
-          const currentValue = allstateConfig[key];
-          let res = typeof currentValue === 'object' ?
-            currentValue.multi && currentValue.value !== null ?
-              (currentValue.value === '' || currentValue.value === undefined) ? [] :
-                (
-                  (currentValue.typeConvertor === Boolean && typeof currentValue.value === 'number') ?
-                    currentValue.value.toString(2).split('').slice(0, currentValue.length).map(val => `${val === '1'}`).reverse() :
-                    `${currentValue.value}`.split(currentValue.separator || ';')
-                ).map(val =>
-                  (currentValue.typeConvertor === Boolean && typeof val === 'string') ?
-                    val === 'true' : (currentValue.typeConvertor || String)(val)) :
-              currentValue.value : currentValue;
-          if (typeof currentValue === 'object' && typeof currentValue.length === 'number' && res.length < currentValue.length) {
-            res = res.concat(new Array(currentValue.length - res.length).fill(false));
+          const allowedValues = hasAllowedValuesProperty && isAllowedValuesAnArray ?
+            stateConfigForParam.allowedValues : null;
+
+          if (hasAllowedValuesProperty && !isAllowedValuesAnArray && this.isInDebugMode) {
+            console.warn(`Query Params Store: ignoring allowed values for parameter key: ${paramKey} since it's not an array!`);
           }
-          acc[key] = res;
-          return acc;
-        }, {});
 
-        const result = { errors: {}, queryParams: null };
+          const typeConvertor = stateConfigForParam.typeConvertor;
+          // const value = paramValue !== NOT_PRESENT ? +paramValue : NaN;
+          const isBinaryBoolean = this.isBinaryBoolean({
+            value: stateConfigForParam.originalValue,
+            multi: stateConfigForParam.multi,
+            typeConvertor
+          });
+          const stateConfigLength = stateConfigForParam.length;
+          const paramConfigValue = stateConfigForParam.hasOwnProperty('value') ? stateConfigForParam.value : stateConfigForParam;
 
-        const queryParams = Object.entries(snapshot.queryParams).reduce((acc, match: [string, string]) => {
-          const [rawKey, value] = match;
-          const key = caseSensitive
-            ? rawKey
-            : supportedKeys.find(objKey => rawKey.toLowerCase() === objKey.toLowerCase());
+          if (paramValue === NOT_PRESENT) {
+            return { ...queryParams, [paramKey]: { urlValue: NOT_PRESENT, storeValue: paramConfigValue } };
+          }
 
-          if (supportedKeys.includes(key) || (!noQueryParams && !removeUnknown)) {
-            const decodedValue = decodeURIComponent(value);
-            const keyConfig = allstateConfig[key];
-            const isBinaryBoolean =
-              typeof keyConfig === 'object' && typeof keyConfig.value === 'number' && keyConfig.typeConvertor === Boolean;
-            const binaryBooleanStringArray = isBinaryBoolean ? (+decodedValue).toString(2).split('') : null;
-            let binaryBooleanResult = isBinaryBoolean ?
-              binaryBooleanStringArray.slice(0, keyConfig.length).map(val => `${val === '1'}`).reverse() : null;
-            const isOverflowing = isBinaryBoolean ? binaryBooleanStringArray.length !== binaryBooleanResult.length : false;
-            if (binaryBooleanResult && binaryBooleanResult.length < keyConfig.length) {
-              binaryBooleanResult = binaryBooleanResult.concat(new Array(keyConfig.length - binaryBooleanResult.length).fill('false'));
+          // Binary Boolean Configuration Case
+          if (isBinaryBoolean) {
+            if (this.isInDebugMode && allowedValues) {
+              console.warn(`Query Params Store: Allowed values can't be used with binary boolean values!`);
             }
-            (keyConfig && keyConfig.multi ?
-              (
-                isBinaryBoolean ?
-                  binaryBooleanResult :
-                  decodedValue.split(keyConfig.separator || ';')
-              ) : [decodedValue]).forEach(currentDecodedValue => {
-                const converter = keyTypeConverter[key] || String;
-                const isBoolean = ['true', 'false'].includes(currentDecodedValue) && converter === Boolean;
-                const convertedValue = converter(isBoolean ? currentDecodedValue === 'true' ? 1 : 0 : currentDecodedValue);
-                const isValidNumber = converter === Number && !Number.isNaN(convertedValue);
-                const isValidString = converter === String && typeof convertedValue === 'string';
-                const isValidBoolean = converter === Boolean && typeof convertedValue === 'boolean';
-                if ((isValidNumber || isValidString || isValidBoolean) &&
-                  (!isBinaryBoolean || !keyConfig.removeInvalid || !isOverflowing) &&
-                  (!keyConfig || !keyConfig.allowedValues || keyConfig.allowedValues.includes(convertedValue))) {
-                  if (keyConfig && keyConfig.multi) {
-                    acc[key] = (acc[key] || []).concat(convertedValue);
-                  } else {
-                    acc[key] = convertedValue;
-                  }
+            const removeInvalid = stateConfigForParam.removeInvalid;
+            const isFalseAsString = paramValue === 'false';
+            const isTrueAsString = paramValue === 'true';
+            const isBooleanAsString = isFalseAsString || isTrueAsString;
+            paramValue = isFalseAsString ? 0 : isTrueAsString ? 1 : paramValue;
+            const binaryBooleanConversionResult = this.getConvertBinaryBooleanResult(paramValue, stateConfigLength);
+            const { binaryBooleanResult, isConvertedCorrectly, isOverflowing } = binaryBooleanConversionResult;
+
+            if (!isConvertedCorrectly || (isOverflowing && removeInvalid)) {
+              if (this.isInDebugMode) {
+                if (isOverflowing) {
+                  // tslint:disable-next-line:max-line-length
+                  console.warn(`Query Params Store: removing parameter key: ${paramKey} since ${paramValue} converted to boolean ${binaryBooleanResult.map(r => r.convertedValue).join(',')} is longer than the configured length of ${stateConfigLength} and the property removeInvalid is set to true!`);
                 } else {
-                  acc[key] = flatstateConfig[key];
-                  result.errors = {
-                    ...result.errors,
-                    [key]: `Invalid value`
-                  };
+                  // tslint:disable-next-line:max-line-length
+                  console.warn(`Query Params Store: Config value ${paramValue} for parameter key ${paramKey} can't be converted correctly so its replaced with the one from the configuration!`);
                 }
-              });
-          } else if (data.storeConfig.removeUnknown) {
-            result.errors = {
-              ...result.errors,
-              [key]: 'Unknown param'
+              }
+              const defaultValue = { storeValue: paramConfigValue, urlValue: null };
+              return { ...queryParams, [paramKey]: defaultValue };
+            }
+
+
+            return {
+              ...queryParams,
+              [paramKey]: {
+                storeValue: binaryBooleanResult.map(r => r.convertedValue),
+                urlValue: paramValue,
+                isNewUrlValue: isBooleanAsString
+              }
             };
           }
-          return acc;
+
+          // const isMultiToMultiParamTransition = !!(stateConfigForParam.multi && prevSnapshot && prevSnapshot.data
+          //   && prevSnapshot.data.storeConfig && prevSnapshot.data.storeConfig.stateConfig &&
+          //   prevSnapshot.data.storeConfig.stateConfig[paramKey] && prevSnapshot.data.storeConfig.stateConfig[paramKey].multi);
+
+          // Multi Value Configuration Case
+          if (stateConfigForParam.multi) {
+
+            // const isSingleToMultiParamTransition = !!(prevSnapshot && prevSnapshot.data
+            //   && prevSnapshot.data.storeConfig && prevSnapshot.data.storeConfig.stateConfig &&
+            //   prevSnapshot.data.storeConfig.stateConfig[paramKey] && !prevSnapshot.data.storeConfig.stateConfig[paramKey].multi);
+
+            let conversionResults = paramValue.split(stateConfigForParam.separator)
+              .map(v => this.getConvertValueResult(v, typeConvertor));
+
+            const multiCount = typeof stateConfigForParam.multiCount === 'number' ?
+              stateConfigForParam.multiCount : paramConfigValue && typeof paramConfigValue.length === 'number' ?
+                paramConfigValue.length : conversionResults.length || 0;
+
+            const difference = isBinaryBoolean ? 0 : +multiCount - conversionResults.length;
+            if (difference > 0) {
+              for (let i = 0; i < difference; i++) {
+                // if we have difference in the lengths of the value of the parameter then we either use the default value
+                // provided in the config for the selected index or just use a default one
+                const conversionResultsIndex = conversionResults.length + i;
+                const hasDefaultValueArrayIndex = paramConfigValue.length > conversionResultsIndex;
+
+                conversionResults.push({
+                  hasValidConversion: true, convertedValue: hasDefaultValueArrayIndex ? paramConfigValue[conversionResultsIndex] :
+                    typeConvertor === String ? '' : typeConvertor === Number ? 0 : false
+                });
+              }
+            } else if (difference < 0) { conversionResults = conversionResults.slice(0, difference); }
+
+            const checkResult = conversionResults.map(v => {
+              if (!v.hasValidConversion) { return 'invalid'; }
+              if (allowedValues && !allowedValues.includes(v)) { return 'not-allowed'; }
+              return null;
+            });
+            const hasInvalidValue = checkResult.includes('invalid');
+            const hasNotAllowedValue = checkResult.includes('not-allowed');
+
+            if (hasInvalidValue || hasNotAllowedValue) {
+              if (this.isInDebugMode) {
+                if (hasInvalidValue) {
+                  // tslint:disable-next-line:max-line-length
+                  console.warn(`Query Params Store: parameter key ${paramKey} with value: ${paramValue} can't be converted correctly!`);
+                } else {
+                  // tslint:disable-next-line:max-line-length
+                  console.warn(`Query Params Store: parameter key ${paramKey} with value: ${paramValue} is not found in the allowed values ${allowedValues}!`);
+                }
+              }
+              const defaultValue = { storeValue: paramConfigValue, urlValue: null };
+              return { ...queryParams, [paramKey]: defaultValue };
+            }
+
+            const invalidURLValue = !!conversionResults.find(r => r.invalidRawConversion);
+            const storeValue = conversionResults.map(r => r.convertedValue);
+            // here we also provide the difference so if it's > 0 we can correctly redirect bellow
+            return { ...queryParams, [paramKey]: { urlValue: paramValue, storeValue, difference, invalidURLValue } };
+          }
+
+          // Default (string, number, boolean) Value Configuration Case
+          {
+            // when using strings hasValidConversion can be true because '10;10' is a valid string so we need to know if we are having
+            // a multi to single transition in order to be able to redirect the the correct url
+            const isMultiToSingleParamTransition = !!(!stateConfigForParam.multi && prevSnapshot && prevSnapshot.data
+              && prevSnapshot.data.storeConfig && prevSnapshot.data.storeConfig.stateConfig &&
+              prevSnapshot.data.storeConfig.stateConfig[paramKey] && prevSnapshot.data.storeConfig.stateConfig[paramKey].multi);
+
+            let isValidMultiToSingle = false;
+            let invalidURLValue = false;
+            let conversionResult = this.getConvertValueResult(paramValue, typeConvertor);
+            if ((!conversionResult.hasValidConversion && prevSnapshot && prevSnapshot.data) || isMultiToSingleParamTransition) {
+              const { stateConfig: prevStateConfig, allQueryParams: allPrevQueryParams } = this.getSnapshotData(prevSnapshot);
+              const prevStateConfigForKey = prevStateConfig[paramKey];
+              if (prevStateConfigForKey && prevStateConfigForKey.multi) {
+                paramValue = allPrevQueryParams[paramKey] ?
+                  allPrevQueryParams[paramKey].split(prevStateConfig[paramKey].separator)[0] :
+                  prevStateConfig[paramKey].value[0];
+
+                conversionResult = this.getConvertValueResult(paramValue, typeConvertor);
+                isValidMultiToSingle = conversionResult.hasValidConversion;
+                invalidURLValue = conversionResult.invalidRawConversion;
+              }
+            }
+
+            const isAllowed = allowedValues ? allowedValues.includes(conversionResult.convertedValue) : true;
+            if (!conversionResult.hasValidConversion || !isAllowed) {
+              if (this.isInDebugMode) {
+                if (!isAllowed) {
+                  // tslint:disable-next-line:max-line-length
+                  console.warn(`Query Params Store: parameter key: ${paramKey} with value: ${paramValue} is not found in the allowed values ${allowedValues}!`);
+                } else {
+                  console.warn(`Query Params Store: parameter key: ${paramKey} with value: ${paramValue} can't be converted correctly!`);
+                }
+              }
+              const defaultValue = { storeValue: paramConfigValue, urlValue: null };
+              return { ...queryParams, [paramKey]: defaultValue };
+            }
+            const storeValue = conversionResult.convertedValue;
+            // if isValidMultiToSingle is true then we need to set isNewUrlValue to true so we can change the URL bellow
+            return {
+              ...queryParams, [paramKey]: {
+                urlValue: paramValue,
+                storeValue,
+                isNewUrlValue: isValidMultiToSingle,
+                invalidURLValue
+              }
+            };
+          }
+
         }, {});
 
-        result.queryParams = queryParams;
+        // Redirect if needed and send the new store
+        {
+          const mustChangeUrl = !!Object.values(queryParamsResult).find(
+            (v: any) => v.urlValue === null || v.isNewUrlValue || v.difference || v.invalidURLValue
+          );
 
-        const errorKeys = Object.keys(result.errors);
-        const queryParamsCleanup = errorKeys.reduce((acc, key) => {
-          acc[key] = undefined;
-          return acc;
-        }, {});
-
-        if (errorKeys.length !== 0) {
-          // router.navigateByUrl(url, extras) skips the { queryParams } that are provided inside the extras
-          // https://github.com/angular/angular/issues/22668
-          if (!this.redirectUrl) {
-            // TODO: extract this to a tap
-            const queryParamsArray = Object.entries({ ...result.queryParams, ...queryParamsCleanup })
-              .reduce((arr, [currKey, currValue]) => {
-                const cfg = data.storeConfig.stateConfig[currKey] as QueryParamsStoreDefaultMultiBooleanBinaryValue ||
-                  { typeConvertor: null, multi: null };
-                const isBinaryBoolean = cfg.typeConvertor === Boolean && cfg.multi === true;
-                const res = `${currKey}=${isBinaryBoolean ? parseBinaryBoolean(currValue as boolean[]) : currValue}`;
-                return currValue ? arr.concat(res) : arr;
-              }, []);
-            const redirectUrl = `${this.url}${queryParamsArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;
+          if (mustChangeUrl) {
+            const queryParamsStringsArray = Object.entries(queryParamsResult).reduce(
+              (acc, [key, { urlValue, difference, storeValue, isNewUrlValue, invalidURLValue }]: [string, any]) => {
+                if (isNewUrlValue || invalidURLValue || ![null, NOT_PRESENT].includes(urlValue)) {
+                  const currentConfig = stateConfig[key];
+                  const separator = currentConfig.separator;
+                  if (invalidURLValue) {
+                    urlValue = currentConfig.multi ? storeValue.join(separator) : storeValue;
+                    difference = 0;
+                  }
+                  if (typeof difference === 'number' && difference !== 0) {
+                    const currentUrlValueArray = urlValue.split(separator);
+                    if (difference > 0) {
+                      for (let i = 0; i < difference; i++) {
+                        urlValue = `${urlValue}${separator}${storeValue[currentUrlValueArray.length + i]}`;
+                      }
+                    } else {
+                      urlValue = `${currentUrlValueArray.slice(0, difference).join(separator)}`;
+                    }
+                  }
+                  return acc.concat(`${key}=${urlValue}`);
+                }
+                return acc;
+              }, []
+            );
+            const redirectUrl = `${this.url}${queryParamsStringsArray.length > 0 ? '?' + queryParamsStringsArray.join('&') : ''}`;
             this.router.navigateByUrl(redirectUrl);
             this.redirectUrl = redirectUrl;
+            return undefined;
           }
-          return;
+
+          const store = Object.entries(queryParamsResult).reduce((acc, [key, data]: [string, any]) => {
+            acc[key] = data.storeValue;
+            return acc;
+          }, {});
+          return store;
         }
-        return Object.assign({}, flatstateConfig, result.queryParams);
+
       }),
-    ).pipe(filter(val => val !== undefined));
-    if (previous) {
-      return stream$.pipe(startWith(null as string));
-    }
-    return stream$;
+    ).pipe(filter(val => !!val));
+
+    return stream$ as any;
   }
 
   constructor(public router: Router) {
     this.snapshot.next(null);
   }
 
-  private _constructHandler() {
+  public _constructHandler() {
     if (this.subscription) { return; }
     this.subscription = this.router.events.pipe(
       filter(event => !(event instanceof ActivationEnd)),
@@ -214,10 +535,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           this.redirectUrl = null;
         }
       }),
-      filter(event => {
-        const snapshot = (event as any).snapshot;
-        return !!snapshot;
-      }),
+      filter(event => !!(event as any).snapshot),
       map(event => {
         let currSnapshot = (event as any).snapshot;
         while (currSnapshot && currSnapshot.children.length !== 0) {
@@ -231,6 +549,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       filter(val => !!val),
       distinctUntilChanged()
     ).subscribe(this.snapshot);
+
+    this.store = this.constructStore().pipe(shareReplay(1));
   }
 
   select<R = any>(
@@ -239,7 +559,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     compare?: (x: any, y: any) => boolean,
   ): Observable<R> {
     const fn = typeof selector === 'function' ? selector : state => state[selector];
-    let select = this.getStore().pipe(map(fn));
+    let select = this.store.pipe(map(fn));
     if (!disableDistinctUntilChanged) {
       select = select.pipe(distinctUntilChanged(compare));
     }
@@ -247,6 +567,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   }
 
   private _match(
+    snapshot: ActivatedRouteSnapshot,
     allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
     navigateTo?: string,
     isDeactivate = false
@@ -255,11 +576,9 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     if (navigateTo === this.fullUrl) {
       throw new Error('Navigating to the same route will result into infinite loop!');
     }
-    return this.getStore().pipe(
-      withLatestFrom(this.skip, allowedValues, this.snapshot.pipe(pairwise())),
-      tap(([, shouldSkip]) => { if (shouldSkip) { this.skip.next(false); } }),
-      filter(([, shouldSkip]) => !shouldSkip),
-      map(([queryParams, , allowedValuesObj, [prevSnapshot]]) => {
+    return this.constructStore(snapshot).pipe(
+      withLatestFrom(allowedValues),
+      map(([queryParams, allowedValuesObj]) => {
         let successfulMatch = true;
         let redirectQueryParams = {};
         for (const [name, value] of Object.entries(queryParams)) {
@@ -273,30 +592,23 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           successfulMatch = successfulMatch && isCurrentMatch;
         }
         if (!successfulMatch && typeof navigateTo === 'string') {
-          if (navigateTo === this.prevFullUrl && prevSnapshot) {
-            if (!isDeactivate) {
-              this.skip.next(true);
-              this.snapshot.next(prevSnapshot);
-            }
-          } else {
-            this.router.navigateByUrl(navigateTo);
-          }
+          if (navigateTo !== this.prevFullUrl) { this.router.navigateByUrl(navigateTo); }
         }
         return successfulMatch;
       }),
     );
   }
 
-  match(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-    return this._match(allowedValues);
+  canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: ActivatedRouteSnapshot) {
+    return this._match(currentSnapshot, allowedValues, this.prevFullUrl).pipe(first());
   }
 
-  canActivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>) {
-    return this._match(allowedValues, this.prevFullUrl).pipe(first());
-  }
-
-  canDeactivate(allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>, currentSnapshot: RouterStateSnapshot) {
-    return this._match(allowedValues, currentSnapshot.url, true).pipe(first());
+  canDeactivate(
+    allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
+    currentSnapshot: ActivatedRouteSnapshot,
+    routerSnapshot: RouterStateSnapshot,
+  ) {
+    return this._match(currentSnapshot, allowedValues, routerSnapshot.url, true).pipe(first());
   }
 
   ngOnDestroy() {

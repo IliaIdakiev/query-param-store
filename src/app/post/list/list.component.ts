@@ -35,7 +35,7 @@ export class ListComponent implements AfterViewInit, OnDestroy {
 
   isDialogDisabled$ = this.queryParamsStore.select<boolean>('disableDialog');
 
-  currentURL: string;
+  getValue = v => Array.isArray(v) ? v[0] : v;
 
   constructor(
     dialog: MatDialog,
@@ -43,10 +43,10 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     private queryParamsStore: QueryParamsStore,
     private router: Router
   ) {
-    this.queryParamsStore.store.pipe(takeUntil(this.isAlive$)).subscribe(console.log);
-    this.pageSize$ = queryParamsStore.select('pageSize').pipe(shareReplay());
-    this.filter$ = queryParamsStore.select('filter').pipe(shareReplay());
-    this.page$ = queryParamsStore.select(state => state.page).pipe(shareReplay());
+
+    this.pageSize$ = queryParamsStore.select('pageSize').pipe(map(this.getValue), shareReplay());
+    this.filter$ = queryParamsStore.select('filter').pipe(map(this.getValue), shareReplay());
+    this.page$ = queryParamsStore.select('page').pipe(map(this.getValue), shareReplay());
 
     routeHelper.routeData$.pipe(
       takeUntil(this.isAlive$),
@@ -60,7 +60,8 @@ export class ListComponent implements AfterViewInit, OnDestroy {
           data: { closeNavigationUrl: '/post/list' },
           disableClose: true,
           width: '600px',
-          closeOnNavigation: false
+          closeOnNavigation: false,
+          panelClass: 'scroll'
         });
       } else if (this.dialogRef && !dialogId) {
         this.dialogRef.close();
@@ -102,7 +103,7 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     this.isDialogDisabled$.pipe(first()).subscribe(isDialogDisabled => {
       this.router.navigate([], {
         queryParams: {
-          disableDialog: isDialogDisabled ? null : true, page: null
+          disableDialog: isDialogDisabled ? null : true
         },
         queryParamsHandling: 'merge'
       });
