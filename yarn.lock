@@ -3893,10 +3893,10 @@ hash.js@^1.0.0, hash.js@^1.0.3:
     inherits "^2.0.3"
     minimalistic-assert "^1.0.1"
 
-hg-resolvers@^10.0.5:
-  version "10.0.5"
-  resolved "https://registry.yarnpkg.com/hg-resolvers/-/hg-resolvers-10.0.5.tgz#e4939670c833dfdd721a3cb06ca4f9607c65be78"
-  integrity sha512-mzxaomwIC5V/P0iDmliRFfxAejl2wPp9D4AqYuyaN3VQpF4OxO1avAfL0glWzYAqBqLl3DcPuWIU7Ooz6Ic9XA==
+hg-resolvers@^11.0.0:
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/hg-resolvers/-/hg-resolvers-11.0.0.tgz#67476be817b8a265799ab3767fab0722788df569"
+  integrity sha512-Hm58xvnF+I8vksQb2veoL6xsLd10CB5jo8NRB27NW/tzq0r+5/2Zj7IZqsKGA+zNmbSltV2FaYFwHwUG9MhA5w==
   dependencies:
     tslib "^1.9.0"
 
@@ -6418,13 +6418,6 @@ qs@~6.5.2:
   version "6.5.2"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
   integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
-
-query-params-store@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/query-params-store/-/query-params-store-3.1.0.tgz#c3e09713f618a9acf848bdf2833b07fc15269223"
-  integrity sha512-RWX4Lhaf+R6p9CqA4WX1ny5UiEqYH1mP3jV9XAQkXPEVNDAwjpXbhOJJm+2PN3gBVf+dTTGH4xqSXAevEWHboQ==
-  dependencies:
-    tslib "^1.9.0"
 
 query-string@^4.1.0:
   version "4.3.4"
