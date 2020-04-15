@@ -1,6 +1,6 @@
 import { Directive, Input } from '@angular/core';
 import { Resolver, HG_RESOLVERS, ResolverConfig, toObservable } from 'hg-resolvers';
-import { IPost, IUser } from 'src/app/shared/interfaces';
+import { IPost, IUser } from '../../shared/interfaces';
 import { UserService } from '../user.service';
 import { QueryParamsStore } from 'query-params-store';
 import { Observable } from 'rxjs';

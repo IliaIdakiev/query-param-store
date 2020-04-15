@@ -3,7 +3,7 @@ import { QueryParamsStore } from 'query-params-store';
 import { map, shareReplay, first, debounceTime, withLatestFrom } from 'rxjs/operators';
 import { Observable, fromEvent, Subject } from 'rxjs';
 import { Router, ActivatedRoute } from '@angular/router';
-import { appQueryBuilder } from 'src/app/shared/utils';
+import { appQueryBuilder } from '../../shared/utils';
 
 @Component({
   selector: 'app-comments',

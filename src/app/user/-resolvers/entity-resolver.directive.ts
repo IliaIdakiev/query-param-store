@@ -1,9 +1,9 @@
 import { Directive } from '@angular/core';
 import { HG_RESOLVERS, Resolver, ResolverConfig } from 'hg-resolvers';
 import { UserService } from '../user.service';
-import { IPost, IUser } from 'src/app/shared/interfaces';
+import { IPost, IUser } from '../../shared/interfaces';
 import { map, filter, distinctUntilChanged } from 'rxjs/operators';
-import { RouterHelperService } from 'src/app/shared/router-helper.service';
+import { RouterHelperService } from '../../shared/router-helper.service';
 
 @Directive({
   selector: '[appEntityResolver]',

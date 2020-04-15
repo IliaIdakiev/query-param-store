@@ -3,7 +3,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PostService } from '../post.service';
 import { Observable, of, Subject } from 'rxjs';
-import { IPost } from 'src/app/shared/interfaces';
+import { IPost } from '../../shared/interfaces';
 import { shareReplay, map, takeUntil, first } from 'rxjs/operators';
 import { NgForm } from '@angular/forms';
 import { QueryParamsStore } from 'query-params-store';
