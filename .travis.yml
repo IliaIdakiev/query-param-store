@@ -9,5 +9,5 @@ branches:
 before_script:
   - npm install -g @angular/cli
 script:
-- ng lint
+- ng lint query-params-store
 - ng test query-params-store --watch=false --browsers=ChromeHeadless
