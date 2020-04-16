@@ -1,6 +1,10 @@
 import { Route } from '@angular/router';
 import { Observable } from 'rxjs';
 
+export interface IQueryParamsStoreModuleConfig {
+  debug: boolean;
+}
+
 export type IStateConfig<T> = { [k in keyof T]: QueryParamsStoreDefaultValue };
 export interface IQueryParamsStoreConfig<T = any> {
   noQueryParams?: boolean;

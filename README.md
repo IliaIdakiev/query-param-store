@@ -12,8 +12,6 @@ Real world example: [Angular Air Demo App](https://github.com/IliaIdakiev/angula
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/jCzZbl9b7w4/0.jpg)](https://www.youtube.com/watch?v=jCzZbl9b7w4)
 
-[![IMAGE ALT TEXT HERE](https://scontent.fsof9-1.fna.fbcdn.net/v/t1.0-9/71153220_10220855638250029_2918228624622485504_o.jpg?_nc_cat=105&_nc_oc=AQkeYv9MfwCL8EQJ7rSP_09A0G6VQZDjcpikRkR3wpMGcx7bcE2gbz055MJwKNkRcWQ&_nc_ht=scontent.fsof9-1.fna&oh=7f9ad2d6b1a1a2dbbab0224943b8e2f4&oe=5DF7123A)](https://www.twitch.tv/videos/488611683##)
-
 ---
 
 ## Configuration
@@ -25,6 +23,7 @@ app.module.ts
     BrowserModule,
     AppRoutingModule,
     QueryParamsStoreModule // <-- Import the Query Params Module to AppModule
+    // Or you can use QueryParamsStoreModule.withConfig({ debug: true }) to have some extra console logging while developing
   ],
   bootstrap: [AppComponent]
 })
@@ -61,6 +60,7 @@ const listRoute: IQueryParamsStoreRoute = {
           multi: true, // the provided value (either from the URL or the default one) will be threated as a string and it
           // will be split by the given separator bellow
           separator: ';' // the seperator that we split by
+          count: 2 //use in order to limit the number of items (this is useful when you have default value set to null)
           value: 'name:asc;email:asc;age:desc', // the default value of the query parameter sort will be
           // ''name:asc;email:asc;age:desc' but since we have 'multi: true' it will be split by the given separator and
           // at the end we will recevice an array - ['name:asc', 'email:asc', 'age:desc'];
@@ -73,7 +73,7 @@ const listRoute: IQueryParamsStoreRoute = {
           value: 0, // The initial value will be converted to binary. Since we have 0 it will just be 0 which will be
           // represented as [false]. If we had 10 we would have 1010 which will be represented as [false, true, false, true]
           // which is the reversed of [true, false, true, false] - 1010 (binaries are read from right to left)
-          length: 6, // limit the length of the array result
+          length: 6, // limit the length of the binary array
           // in the case of 6 if we have ?openToggles=0 we will have [false, false, false, false, false, false]
           // if we have ?openToggles=10 we will have [false, true, false, true, false, false]
           removeInvalid: true // remove the invalid numbers that overflow the lenght
@@ -162,7 +162,7 @@ export class ListActivate implements CanActivate {
     // },
     // this guard will allow the route to be accessed only if the role query param is 'ADMIN' or the defaultValue from
     // the configuration object (null). If we don't have a defaultValue we should add undefined instead of null
-    return this.queryParamsStore.canActivate({ role: { match: [null, 'ADMIN'] } });
+    return this.queryParamsStore.canActivate({ role: { match: [null, 'ADMIN'] } }, route);
   }
 }
 
@@ -194,7 +194,7 @@ export class DialogDeactivate implements CanDeactivate<Observable<boolean>> {
     //   },
     // this guard will allow the route to be exited only if the completed query param is true or the defaultValue from
     // the configuration object (null).
-    return this.queryParamsStore.canDeactivate({ completed: { match: [null, true] } }, currentState);
+    return this.queryParamsStore.canDeactivate({ completed: { match: [null, true] } }, currentRoute, currentState)
   }
 }
 ```

@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
-import { MatDialogModule, MatTableModule } from '@angular/material';
+import { MatTableModule } from '@angular/material';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { CoreModule } from './core/core.module';
@@ -23,7 +23,7 @@ import { NotFoundComponent } from './not-found/not-found.component';
     MatTableModule,
     AppRoutingModule,
     HttpClientModule,
-    QueryParamsStoreModule
+    QueryParamsStoreModule.withConfig({ debug: true })
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, Inject } from '@angular/core';
 import {
   Router,
   NavigationStart,
@@ -10,7 +10,7 @@ import {
   NavigationEnd,
   ResolveStart
 } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, BehaviorSubject, of } from 'rxjs';
+import { ReplaySubject, Subscription, Observable, of as observableOf, of } from 'rxjs';
 import {
   map,
   filter,
@@ -19,7 +19,6 @@ import {
   withLatestFrom,
   first,
   pairwise,
-  startWith,
   shareReplay,
   switchMap,
   mapTo
@@ -28,8 +27,10 @@ import {
   IAllowedValuesConfig,
   IQueryParamsStoreConfig,
   IStateConfig,
-  QueryParamsStoreDefaultValue
+  QueryParamsStoreDefaultValue,
+  IQueryParamsStoreModuleConfig
 } from './interfaces-and-types';
+import { QPS_CONFIG } from './tokens';
 
 type SelectorFn<T> = (a: any) => T;
 const NOT_PRESENT = Symbol('NOT_PRESENT');
@@ -50,7 +51,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   private prevFullUrl: string;
   private redirectUrl: string;
 
-  private isInDebugMode = true;
+  private isInDebugMode = false;
 
   store: Observable<T>;
 
@@ -514,8 +515,9 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     return stream$ as any;
   }
 
-  constructor(public router: Router) {
+  constructor(public router: Router, @Inject(QPS_CONFIG) config: IQueryParamsStoreModuleConfig) {
     this.snapshot.next(null);
+    this.isInDebugMode = !!config && config.debug;
   }
 
   public _constructHandler() {
