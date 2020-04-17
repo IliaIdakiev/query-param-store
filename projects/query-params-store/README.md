@@ -10,6 +10,7 @@ Real world example: [Angular Air Demo App](https://github.com/IliaIdakiev/angula
 
 # Video Presentations
 
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/gTJVfRq7uog/0.jpg)](https://www.youtube.com/watch?v=gTJVfRq7uog)
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/jCzZbl9b7w4/0.jpg)](https://www.youtube.com/watch?v=jCzZbl9b7w4)
 
 ---

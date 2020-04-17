@@ -476,6 +476,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
               (acc, [key, { urlValue, difference, storeValue, isNewUrlValue, invalidURLValue }]: [string, any]) => {
                 if (isNewUrlValue || invalidURLValue || ![null, NOT_PRESENT].includes(urlValue)) {
                   const currentConfig = stateConfig[key];
+                  if (!currentConfig) { return acc; }
                   const separator = currentConfig.separator;
                   if (invalidURLValue) {
                     urlValue = currentConfig.multi ? storeValue.join(separator) : storeValue;
