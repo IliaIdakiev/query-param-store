@@ -8,7 +8,6 @@ import { QPS_CONFIG } from './tokens';
 
 export function qpsFactory(router: Router, config: IQueryParamsStoreModuleConfig) {
   const instance = new QueryParamsStore(router, config);
-  instance._constructHandler();
   return instance;
 }
 
@@ -36,5 +35,9 @@ export class QueryParamsStoreModule {
         serviceProvider
       ]
     };
+  }
+
+  constructor(qps: QueryParamsStore) {
+    qps._constructHandler();
   }
 }
