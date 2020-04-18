@@ -138,7 +138,8 @@ describe('QueryParamsStore', () => {
       router.resetConfig(configs);
 
       const service: QueryParamsStore = TestBed.get(QueryParamsStore);
-      router.initialNavigation();
+      const ngZone: NgZone = TestBed.get(NgZone);
+      ngZone.run(() => { router.initialNavigation(); });
 
       zip(
         service.store,
@@ -214,7 +215,8 @@ describe('QueryParamsStore', () => {
       router.resetConfig(configs);
 
       const service: QueryParamsStore = TestBed.get(QueryParamsStore);
-      router.initialNavigation();
+      const ngZone: NgZone = TestBed.get(NgZone);
+      ngZone.run(() => { router.initialNavigation(); });
 
       zip(
         service.store,
@@ -754,8 +756,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single(Number) to single(Number) param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?pageSize=100');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('?pageSize=100'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=100'); }); });
 
@@ -812,8 +814,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single(Number) to single(Number) param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?pageSize=100');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('?pageSize=100'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=100'); }); });
 
@@ -872,8 +874,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single(Number) to single(Number) param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test=false');
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('?test=false'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test=false'); }); });
 
@@ -942,8 +943,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single(BinaryBoolean) to single(BinaryBoolean) param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?openToggles=4');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('?openToggles=4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=4'); }); });
 
@@ -964,8 +965,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single(BinaryBoolean) to single(BinaryBoolean) param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?openToggles=4');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/test?openToggles=4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/?openToggles=4'); }); });
 
@@ -1024,8 +1025,8 @@ describe('QueryParamsStore', () => {
       it('multi(BinaryBoolean/6) -> single(String)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?openToggles=4');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/test?openToggles=4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?openToggles=4'); }); });
 
@@ -1046,8 +1047,8 @@ describe('QueryParamsStore', () => {
       it('single(String) -> multi(BinaryBoolean/6)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/?openToggles=4');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/?openToggles=4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=4'); }); });
 
@@ -1106,8 +1107,8 @@ describe('QueryParamsStore', () => {
       it('multi(BinaryBoolean/6) -> single(Boolean)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?openToggles=4');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/test?openToggles=4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?openToggles=4'); }); });
 
@@ -1128,8 +1129,8 @@ describe('QueryParamsStore', () => {
       it('single(Boolean) -> multi(BinaryBoolean/6) (1)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/?openToggles=false');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/?openToggles=false'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=false'); }); });
 
@@ -1150,8 +1151,8 @@ describe('QueryParamsStore', () => {
       it('single(Boolean) -> multi(BinaryBoolean/6) (2)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/?openToggles=true');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/?openToggles=true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=true'); }); });
 
@@ -1210,8 +1211,8 @@ describe('QueryParamsStore', () => {
       it('multi(BinaryBoolean/6) -> single(Number)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?openToggles=4');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/test?openToggles=4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?openToggles=4'); }); });
 
@@ -1232,8 +1233,8 @@ describe('QueryParamsStore', () => {
       it('single(Number) -> multi(BinaryBoolean/6) (1)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/?openToggles=6');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/?openToggles=6'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?openToggles=6'); }); });
 
@@ -1299,7 +1300,7 @@ describe('QueryParamsStore', () => {
       it('multi(BinaryBoolean/6) -> multi(BinaryBoolean/10)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -1322,8 +1323,8 @@ describe('QueryParamsStore', () => {
       it('/ multi(BinaryBoolean/10) -> multi(BinaryBoolean/6)', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -1346,8 +1347,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?pageSize=10');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?pageSize=10'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=10'); }); });
 
@@ -1370,8 +1371,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?pageSize=10;30');
+
+        ngZone.run(() => { router.initialNavigation(); router.navigateByUrl('/test?pageSize=10;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?pageSize=10;30'); }); });
 
@@ -1439,7 +1440,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -1462,8 +1463,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -1486,8 +1487,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?pageSize=10');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?pageSize=10'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=10'); }); });
 
@@ -1510,8 +1511,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?pageSize=10;30');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?pageSize=10;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?pageSize=10;30'); }); });
 
@@ -1579,7 +1580,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -1602,8 +1603,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -1626,8 +1627,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test1=false&test2=true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?test1=false&test2=true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test1=false&test2=true'); }); });
 
@@ -1650,8 +1651,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?test1=true;false&test2=false;true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?test1=true;false&test2=false;true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?test1=true;false&test2=false;true'); }); });
 
@@ -1719,7 +1720,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -1742,8 +1743,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -1766,8 +1767,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?pageSize=10');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?pageSize=10'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=10'); }); });
 
@@ -1790,8 +1791,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?pageSize=10;30');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?pageSize=10;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?pageSize=10;30'); }); });
 
@@ -1852,7 +1853,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); }); router.initialNavigation();
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -1873,8 +1874,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -1895,8 +1896,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test1=TEST');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?test1=TEST'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test1=TEST'); }); });
 
@@ -1917,8 +1918,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?test1=false;true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?test1=false;true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?test1=false;true'); }); });
 
@@ -1984,7 +1985,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -2007,8 +2008,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -2031,8 +2032,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test1=false&test2=true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?test1=false&test2=true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test1=false&test2=true'); }); });
 
@@ -2055,8 +2056,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?test1=true;false&test2=false;true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?test1=true;false&test2=false;true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?test1=true;false&test2=false;true'); }); });
 
@@ -2124,7 +2125,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -2147,8 +2148,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -2171,8 +2172,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test1=false&test2=true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?test1=false&test2=true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test1=false&test2=true'); }); });
 
@@ -2195,8 +2196,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?test1=1;2&test2=0;4');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?test1=1;2&test2=0;4'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?test1=1;2&test2=0;4'); }); });
 
@@ -2264,7 +2265,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -2287,8 +2288,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -2311,8 +2312,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test1=1&test2=true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?test1=1&test2=true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test1=1&test2=true'); }); });
 
@@ -2335,8 +2336,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?test1=1;2&test2=2;1');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?test1=1;2&test2=2;1'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?test1=1;2&test2=2;1'); }); });
 
@@ -2404,7 +2405,7 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
+        ngZone.run(() => { router.initialNavigation(); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test'); }); });
 
@@ -2427,8 +2428,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/'); }); });
 
@@ -2451,8 +2452,8 @@ describe('QueryParamsStore', () => {
       it('should redirect a single to multi param configuration and maintain initial param values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('?test1=false&test2=true');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('?test1=false&test2=true'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?test1=false&test2=true'); }); });
 
@@ -2475,8 +2476,8 @@ describe('QueryParamsStore', () => {
       it('should redirect multi param configuration to single and maintain initial values', done => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
-        router.initialNavigation();
-        router.navigateByUrl('/test?test1=1;2&test2=2;1');
+        ngZone.run(() => { router.initialNavigation(); });
+        ngZone.run(() => { router.navigateByUrl('/test?test1=1;2&test2=2;1'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?test1=1;2&test2=2;1'); }); });
 
@@ -2555,7 +2556,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=10;30');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=10;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=10;30'); }); });
 
@@ -2579,7 +2580,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('/test?pageSize=10;30;30');
+        ngZone.run(() => { router.navigateByUrl('/test?pageSize=10;30;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?pageSize=10;30;30'); }); });
 
@@ -2658,7 +2659,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=10;30');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=10;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=10;30'); }); });
 
@@ -2682,7 +2683,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('/test?pageSize=10;30;30');
+        ngZone.run(() => { router.navigateByUrl('/test?pageSize=10;30;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('?pageSize=10;30;30'); }); });
 
@@ -2761,7 +2762,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=0;30');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=0;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=0;30'); }); });
 
@@ -2865,7 +2866,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=0;30');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=0;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=0;30'); }); });
 
@@ -2969,7 +2970,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=0;30');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=0;30'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=0;30'); }); });
 
@@ -3073,7 +3074,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=true;false');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=true;false'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=true;false'); }); });
 
@@ -3177,7 +3178,7 @@ describe('QueryParamsStore', () => {
         const service: QueryParamsStore = TestBed.get(QueryParamsStore);
         const ngZone: NgZone = TestBed.get(NgZone);
         router.setUpLocationChangeListener();
-        router.navigateByUrl('?pageSize=1;2');
+        ngZone.run(() => { router.navigateByUrl('?pageSize=1;2'); });
 
         Promise.resolve().then(() => { ngZone.run(() => { router.navigateByUrl('/test?pageSize=1;2'); }); });
 
