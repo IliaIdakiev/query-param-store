@@ -16,21 +16,72 @@ import { IQueryParamsStoreRoutes } from './interfaces-and-types';
 import { NgZone } from '@angular/core';
 import { zip, Subject } from 'rxjs';
 import { filter, tap, first, switchMap, map, pairwise } from 'rxjs/operators';
-import { QueryParamsStoreModule } from './query-params-store.module';
+import { QueryParamsStoreModule, serviceProvider } from './query-params-store.module';
+import { QPS_CONFIG } from './tokens';
+import { binaryToNumber } from './utils';
 
 describe('QueryParamsStore', () => {
-  describe('default', () => {
-    beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule, QueryParamsStoreModule] }));
 
-    it('should be created', () => {
-      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+  describe('util tests', () => {
+    it('should convert a given number to a number', () => {
+      const result = binaryToNumber(1);
+      expect(result).toEqual(1);
+    });
+
+    it('should convert a given empty string value to a number', () => {
+      const result = binaryToNumber('');
+      expect(result).toEqual(0);
+    });
+
+    it('should convert a given empty string value to a number', () => {
+      const result = binaryToNumber('hello');
+      expect(result).toEqual(1);
+    });
+
+    it('should convert a given empty string value to a number', () => {
+      const result = binaryToNumber([true, false, false, true]);
+      expect(result).toEqual(9);
+    });
+
+    it('should convert a given empty string value to a number', () => {
+      const result = binaryToNumber([false, true, false, false]);
+      expect(result).toEqual(2);
+    });
+  });
+
+  describe('setup and initialization', () => {
+
+
+    it('should be created and handler to be constructed', () => {
+      TestBed.configureTestingModule({
+        imports: [RouterTestingModule],
+        providers: [serviceProvider, { provide: QPS_CONFIG, useValue: null }]
+      });
+      const service = TestBed.get(QueryParamsStore);
+      const constructHandlerSpy = spyOn(service, '_constructHandler');
+      const module = new QueryParamsStoreModule(service);
       expect(service).toBeTruthy();
+      expect(constructHandlerSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should be created and handler to be constructed in debug mode', () => {
+      TestBed.configureTestingModule({
+        imports: [RouterTestingModule],
+        providers: [serviceProvider, { provide: QPS_CONFIG, useValue: { debug: true } }]
+      });
+      const service = TestBed.get(QueryParamsStore);
+      const constructHandlerSpy = spyOn(service, '_constructHandler');
+      const module = new QueryParamsStoreModule(service);
+      expect(service).toBeTruthy();
+      expect(service.isInDebugMode).toBeTruthy(true);
+      expect(constructHandlerSpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('Store tests', () => {
     let router: Router;
     beforeEach(() => TestBed.configureTestingModule({ imports: [RouterTestingModule, QueryParamsStoreModule] }));
+    afterEach(() => router.dispose());
 
     it('no query params default values', (done) => {
       router = TestBed.get(Router);
@@ -61,8 +112,196 @@ describe('QueryParamsStore', () => {
         expect(state).toEqual({});
         done();
       }, console.error);
+    });
 
-      router.dispose();
+    it('should successfully return binary boolean default value (no length provided)', (done) => {
+      router = TestBed.get(Router);
+
+      class TestComponent { }
+      const configs: IQueryParamsStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        data: {
+          storeConfig: {
+            stateConfig: {
+              test: {
+                typeConvertor: Boolean,
+                multi: true,
+                value: 4
+              }
+            }
+          }
+        }
+      }];
+
+      router.resetConfig(configs);
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      router.initialNavigation();
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/');
+        expect(state).toEqual({ test: [false, false, true] });
+        done();
+      }, console.error);
+    });
+
+    it('should successfully return binary boolean query param value (no length provided)', (done) => {
+      router = TestBed.get(Router);
+
+      class TestComponent { }
+      const configs: IQueryParamsStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        data: {
+          storeConfig: {
+            stateConfig: {
+              test: {
+                typeConvertor: Boolean,
+                multi: true,
+                value: 4
+              }
+            }
+          }
+        }
+      }];
+
+      router.resetConfig(configs);
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      router.setUpLocationChangeListener();
+
+      const ngZone: NgZone = TestBed.get(NgZone);
+      ngZone.run(() => { router.navigateByUrl(`?test=5`); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/?test=5');
+        expect(state).toEqual({ test: [true, false, true] });
+        done();
+      }, console.error);
+    });
+
+    it('should successfully return binary boolean default value (with length provided)', (done) => {
+      router = TestBed.get(Router);
+
+      class TestComponent { }
+      const configs: IQueryParamsStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        data: {
+          storeConfig: {
+            stateConfig: {
+              test: {
+                typeConvertor: Boolean,
+                multi: true,
+                value: 4,
+                length: 10
+              }
+            }
+          }
+        }
+      }];
+
+      router.resetConfig(configs);
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      router.initialNavigation();
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/');
+        expect(state).toEqual({ test: [false, false, true, false, false, false, false, false, false, false] });
+        done();
+      }, console.error);
+    });
+
+    it('should successfully return binary boolean query param value (with length provided)', (done) => {
+      router = TestBed.get(Router);
+
+      class TestComponent { }
+      const configs: IQueryParamsStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        data: {
+          storeConfig: {
+            stateConfig: {
+              test: {
+                typeConvertor: Boolean,
+                multi: true,
+                value: 4,
+                length: 10
+              }
+            }
+          }
+        }
+      }];
+
+      router.resetConfig(configs);
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+
+      const ngZone: NgZone = TestBed.get(NgZone);
+      ngZone.run(() => { router.navigateByUrl(`?test=5`); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/?test=5');
+        expect(state).toEqual({ test: [true, false, true, false, false, false, false, false, false, false] });
+        done();
+      }, console.error);
+    });
+
+    it('should successfully remove invalid binary boolean value', (done) => {
+      router = TestBed.get(Router);
+
+      class TestComponent { }
+      const configs: IQueryParamsStoreRoutes = [{
+        path: '',
+        pathMatch: 'full',
+        component: TestComponent,
+        data: {
+          storeConfig: {
+            stateConfig: {
+              test: {
+                typeConvertor: Boolean,
+                multi: true,
+                value: 4,
+                length: 10
+              }
+            }
+          }
+        }
+      }];
+
+      router.resetConfig(configs);
+
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+
+      const ngZone: NgZone = TestBed.get(NgZone);
+      ngZone.run(() => { router.navigateByUrl(`?test=aaa`); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        expect(e.url).toEqual('/');
+        expect(state).toEqual({ test: [false, false, true, false, false, false, false, false, false, false] });
+        done();
+      }, console.error);
     });
 
     describe('simple navigation', () => {

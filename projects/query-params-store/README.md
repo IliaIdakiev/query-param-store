@@ -68,6 +68,11 @@ const listRoute: IQueryParamsStoreRoute = {
           typeConvertor: String, // the convertor will be used on each value from the split array
           // (possible values for typeConvertor - String | Number | Boolean)
         },
+        // we call this option (Binary Boolean - it converts a given number query parameter to a boolean array and it's very
+        // useful when dealing with a lot of toggles/popups or whatever and you want ot use the store to take care of the state)
+        // we also provide a utility function for easier navigation when using the Binary Boolean option - binaryToNumber so 
+        // navigation will look something like: 
+        // this.router.navigate([], { queryParams: { openToggles: binaryToNumber(updatedOpenTogglesBooleanArray) ... } ... }) 
         openToggles: {
           typeConvertor: Boolean, // Convert the values to booleans
           multi: true, // We will be getting a boolean array with true or false values for each open/closed toggle section

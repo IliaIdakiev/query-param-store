@@ -132,7 +132,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         // value is not in the supported type => remove invalid configuration
         if (this.isInDebugMode) {
           // tslint:disable-next-line:max-line-length
-          console.warn(`Query Params Store: Invalid value configuration forparameter key ${key}! (value can be number, string, boolean or null)`);
+          console.warn(`Query Params Store: Invalid value configuration for parameter key ${key}! (value can be number, string, boolean or null)`);
         }
         return acc;
       }
@@ -142,14 +142,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       const isBinaryBoolean = this.isBinaryBoolean({ value, typeConvertor, multi: isMultiValueConfig });
 
       if (isBinaryBoolean) {
-        if (!configForKey.hasOwnProperty('length')) {
-          // missing the length property => remove invalid configuration
-          // tslint:disable-next-line:max-line-length
-          if (this.isInDebugMode) { console.warn(`Query Params Store: Invalid configuration for parameter key ${key}! (length is missing)`); }
-          return acc;
-        }
-
-        const configForKeyLength = +(configForKey as any).length;
+        const configForKeyLength = !configForKey.hasOwnProperty('length') ? undefined : +(configForKey as any).length;
         value = value.toString(2).split('').slice(0, configForKeyLength).map(val => `${val === '1'}`).reverse();
 
         if (value.length < configForKeyLength) {

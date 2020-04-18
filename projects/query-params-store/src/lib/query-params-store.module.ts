@@ -11,7 +11,7 @@ export function qpsFactory(router: Router, config: IQueryParamsStoreModuleConfig
   return instance;
 }
 
-const serviceProvider: Provider = {
+export const serviceProvider: Provider = {
   provide: QueryParamsStore,
   useFactory: qpsFactory,
   deps: [Router, QPS_CONFIG],
