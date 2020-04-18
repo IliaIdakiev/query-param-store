@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/IliaIdakiev/query-param-store.svg?branch=master)](https://travis-ci.com/IliaIdakiev/query-param-store)
+[![Build Status](https://travis-ci.org/IliaIdakiev/query-param-store.svg?branch=master)](https://travis-ci.org/IliaIdakiev/query-param-store)
 
 # Angular Query Params Store - RxJS Query Params State Management Container for Angular
 
