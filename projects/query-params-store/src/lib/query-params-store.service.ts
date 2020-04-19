@@ -30,7 +30,9 @@ import {
   QueryParamsStoreDefaultValue,
   IQueryParamsStoreModuleConfig
 } from './interfaces-and-types';
+import { decompressFromEncodedURIComponent } from 'lz-string';
 import { QPS_CONFIG } from './tokens';
+import { compressQueryParams } from './utils';
 
 type SelectorFn<T> = (a: any) => T;
 const NOT_PRESENT = Symbol('NOT_PRESENT');
@@ -52,6 +54,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   private redirectUrl: string;
 
   private isInDebugMode = false;
+  private useCompression = false;
+  private compressionKey = null;
 
   store: Observable<T>;
 
@@ -227,7 +231,20 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     }
 
     const noQueryParams = storeConfig.noQueryParams || false;
-    const snapshotQueryParams = snapshot.queryParams;
+    let snapshotQueryParams = snapshot.queryParams;
+    if (this.useCompression) {
+      const key = this.compressionKey || 'q';
+      const compressedString = snapshotQueryParams[key];
+      if (compressedString) {
+        const decompressedString = decompressFromEncodedURIComponent(compressedString);
+        try {
+          snapshotQueryParams = JSON.parse(decompressedString);
+        } catch {
+          if (this.isInDebugMode) { console.warn(`Query Params Store: Can't decompress provided value!`); }
+          snapshotQueryParams = {};
+        }
+      }
+    }
 
     const stateConfig = this.parseStateConfig(storeConfig.stateConfig || {});
     const removeUnknown = storeConfig.removeUnknown || false;
@@ -465,7 +482,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
           );
 
           if (mustChangeUrl) {
-            const queryParamsStringsArray = Object.entries(queryParamsResult).reduce(
+            const queryParamsTupleArray = Object.entries(queryParamsResult).reduce(
               (acc, [key, { urlValue, difference, storeValue, isNewUrlValue, invalidURLValue }]: [string, any]) => {
                 if (isNewUrlValue || invalidURLValue || ![null, NOT_PRESENT].includes(urlValue)) {
                   const currentConfig = stateConfig[key];
@@ -485,12 +502,26 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                       urlValue = `${currentUrlValueArray.slice(0, difference).join(separator)}`;
                     }
                   }
-                  return acc.concat(`${key}=${urlValue}`);
+                  return acc.concat([[key, urlValue]]);
                 }
                 return acc;
               }, []
             );
-            const redirectUrl = `${this.url}${queryParamsStringsArray.length > 0 ? '?' + queryParamsStringsArray.join('&') : ''}`;
+
+            let redirectUrl = null;
+
+            if (this.useCompression) {
+              const queryParamsObject = queryParamsTupleArray.reduce((acc, [key, value]) => {
+                acc[key] = value;
+                return acc;
+              }, {});
+              const compressedQueryParams = compressQueryParams(queryParamsObject);
+              redirectUrl =
+                `${this.url}${queryParamsTupleArray.length > 0 ? `?${this.compressionKey || 'q'}=${compressedQueryParams}` : ''}`;
+            } else {
+              const queryParamsArray = queryParamsTupleArray.reduce((acc, [key, value]) => acc.concat(`${key}=${value}`), []);
+              redirectUrl = `${this.url}${queryParamsTupleArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;
+            }
             this.router.navigateByUrl(redirectUrl);
             this.redirectUrl = redirectUrl;
             return undefined;
@@ -512,6 +543,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
   constructor(public router: Router, @Inject(QPS_CONFIG) config: IQueryParamsStoreModuleConfig) {
     this.snapshot.next(null);
     this.isInDebugMode = !!config && config.debug;
+    this.useCompression = !!config && config.useCompression;
+    this.compressionKey = !!config && config.compressionKey;
   }
 
   public _constructHandler() {

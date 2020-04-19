@@ -25,6 +25,7 @@ app.module.ts
     AppRoutingModule,
     QueryParamsStoreModule // <-- Import the Query Params Module to AppModule
     // Or you can use QueryParamsStoreModule.withConfig({ debug: true }) to have some extra console logging while developing
+    // Check out the section on the bottom in order to find out about QueryParamsStoreModule.withConfig({ useCompression: true })
   ],
   bootstrap: [AppComponent]
 })
@@ -243,6 +244,25 @@ list.component.html
 <ul>
   <li *ngFor="let user of userList">{{user.email}}</li>
 </ul>
+```
+
+## Now (from v.3.5) you also have the option to use lz-string (LZ-based compression algorithm) to minimize the size of your query parameters.
+
+app.module.ts
+```typescript
+@NgModule({
+  declarations: [...],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    QueryParamsStoreModule.withConfig({ 
+      useCompression: true,
+      compressionKey: 'i' // you can use this in order to provide a custom query parameter key that will be for the compressed query params
+    })
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
 ```
 
 

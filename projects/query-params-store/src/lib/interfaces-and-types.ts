@@ -2,7 +2,9 @@ import { Route } from '@angular/router';
 import { Observable } from 'rxjs';
 
 export interface IQueryParamsStoreModuleConfig {
-  debug: boolean;
+  debug?: boolean;
+  useCompression?: boolean;
+  compressionKey?: string;
 }
 
 export type IStateConfig<T> = { [k in keyof T]: QueryParamsStoreDefaultValue };

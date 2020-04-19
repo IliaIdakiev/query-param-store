@@ -27,7 +27,7 @@ export const serviceProvider: Provider = {
   exports: []
 })
 export class QueryParamsStoreModule {
-  static withConfig(config: { debug: boolean }): ModuleWithProviders {
+  static withConfig(config: IQueryParamsStoreModuleConfig): ModuleWithProviders {
     return {
       ngModule: QueryParamsStoreModule,
       providers: [
