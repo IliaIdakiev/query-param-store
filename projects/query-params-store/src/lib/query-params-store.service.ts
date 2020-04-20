@@ -234,7 +234,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     let snapshotQueryParams = snapshot.queryParams;
     if (this.useCompression) {
       const key = this.compressionKey || 'q';
-      const compressedString = snapshotQueryParams[key];
+      const compressedString = key === '#' ? snapshot.fragment : snapshotQueryParams[key];
       if (compressedString) {
         const decompressedString = decompressFromEncodedURIComponent(compressedString);
         try {
@@ -516,8 +516,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                 return acc;
               }, {});
               const compressedQueryParams = compressQueryParams(queryParamsObject);
-              redirectUrl =
-                `${this.url}${queryParamsTupleArray.length > 0 ? `?${this.compressionKey || 'q'}=${compressedQueryParams}` : ''}`;
+              const compressionKey = this.compressionKey || 'q';
+              const anchorCompressionKey = compressionKey === '#';
+              redirectUrl = `${anchorCompressionKey ? this.url.split('#')[0] : this.url}${queryParamsTupleArray.length > 0 ?
+                anchorCompressionKey ? `#${compressedQueryParams}` : `?${compressionKey}=${compressedQueryParams}` : ''}`;
             } else {
               const queryParamsArray = queryParamsTupleArray.reduce((acc, [key, value]) => acc.concat(`${key}=${value}`), []);
               redirectUrl = `${this.url}${queryParamsTupleArray.length > 0 ? '?' + queryParamsArray.join('&') : ''}`;

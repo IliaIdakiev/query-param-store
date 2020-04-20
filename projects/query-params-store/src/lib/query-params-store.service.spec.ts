@@ -3657,6 +3657,76 @@ describe('QueryParamsStore', () => {
           done();
       }, console.error);
     });
+
+    it('should decompress, parse and return the provided in URL query params and fix url (anchor compression key \'#\')', (done) => {
+      setup({ compressionKey: '#' });
+      const service: QueryParamsStore = TestBed.get(QueryParamsStore);
+      const ngZone: NgZone = TestBed.get(NgZone);
+      router.setUpLocationChangeListener();
+
+      const queryParams = {
+        pageSize: 10,
+        filter: 'some%20random%20string',
+        stringOrNull: '!!!',
+        numberOrNull: 20,
+        page: '3;4',
+        pageNumbersOrEmptyArray1: '6;7',
+        pageNumbersOrNull: '3;2;1',
+        pageNumbersOrEmptyArray2: '10;20;30',
+        pageStringsOrEmptyArray1: 'a;b;c',
+        pageStringsOrNull: 'c;1;e',
+        pageStringsOrEmptyArray2: '1;2;3',
+        allowed: 'Test',
+        openToggles: 60,
+        pageSizeWithAllowedValues: 1
+      };
+      const fixedQueryParams = {
+        pageSize: '10',
+        filter: 'some random string',
+        stringOrNull: '!!!',
+        numberOrNull: '20',
+        page: '3;4;0',
+        pageNumbersOrEmptyArray1: '6;7',
+        pageNumbersOrNull: '3;2',
+        pageNumbersOrEmptyArray2: '10;20;30',
+        pageStringsOrEmptyArray1: 'a;b;c',
+        pageStringsOrNull: 'c;1;e',
+        pageStringsOrEmptyArray2: '1;2;3',
+        allowed: 'Test',
+        openToggles: '60',
+        pageSizeWithAllowedValues: '1'
+      };
+      const compressed = compressQueryParams(queryParams);
+      const fixedCompressed = compressQueryParams(fixedQueryParams);
+      // tslint:disable-next-line:max-line-length
+      ngZone.run(() => { router.navigateByUrl(`/#${compressed}`); });
+
+      zip(
+        service.store,
+        router.events.pipe(filter<NavigationEnd>(e => e instanceof NavigationEnd))
+      ).subscribe(([state, e]) => {
+        const query = e.url.split('#')[1].replace(/%20/g, '+');
+        const decompressedQuery = JSON.parse(decompressFromEncodedURIComponent(query));
+
+        expect(query).toEqual(fixedCompressed);
+        expect(fixedQueryParams).toEqual(decompressedQuery);
+        expect(state.pageSize).toEqual(10);
+        expect(state.filter).toEqual('some random string');
+        expect(state.stringOrNull).toEqual('!!!');
+        expect(state.numberOrNull).toEqual(20);
+        expect(state.page).toEqual([3, 4, 0]);
+        expect(state.pageNumbersOrEmptyArray1).toEqual([6, 7]);
+        expect(state.pageNumbersOrNull).toEqual([3, 2]);
+        expect(state.pageNumbersOrEmptyArray2).toEqual([10, 20, 30]);
+        expect(state.pageStringsOrEmptyArray1).toEqual(['a', 'b', 'c']);
+        expect(state.pageStringsOrNull).toEqual(['c', '1', 'e']);
+        expect(state.pageStringsOrEmptyArray2).toEqual(['1', '2', '3']);
+        expect(state.allowed).toEqual('Test');
+        expect(state.openToggles).toEqual([false, false, true, true, true, true]);
+        expect(state.pageSizeWithAllowedValues).toEqual(1),
+          done();
+      }, console.error);
+    });
   });
 
 });
