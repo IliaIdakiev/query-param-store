@@ -32,7 +32,7 @@ import {
 } from './interfaces-and-types';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { QPS_CONFIG } from './tokens';
-import { compressQueryParams } from './utils';
+import { compress } from './utils';
 
 type SelectorFn<T> = (a: any) => T;
 const NOT_PRESENT = Symbol('NOT_PRESENT');
@@ -141,6 +141,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         return acc;
       }
 
+      const useCompression = (configForKey as any).useCompression || false;
       const isMultiValueConfig = (configForKey as any).multi || false;
       const multiCount = isMultiValueConfig ? (configForKey as any).count : null;
       const isBinaryBoolean = this.isBinaryBoolean({ value, typeConvertor, multi: isMultiValueConfig });
@@ -181,6 +182,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
         value,
         multi: isMultiValueConfig,
         multiCount,
+        useCompression,
         separator: (configForKey as any).separator || ';'
       };
 
@@ -266,7 +268,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       filter(val => !this.redirectUrl || !!val[1]),
       switchMap(s => snpsht ? [s] : this.router.events.pipe(
         // emit the store if we are in the resolve phase (the guard checks passed) or catch the case
-        // if we are just chaning a query paramter in an already resolved route (watch for the NavigationEnd)
+        // if we are just changing a query paramter in an already resolved route (watch for the NavigationEnd)
         first(e => e instanceof ResolveStart || e instanceof NavigationEnd), mapTo(s)),
 
       ),
@@ -515,7 +517,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
                 acc[key] = value;
                 return acc;
               }, {});
-              const compressedQueryParams = compressQueryParams(queryParamsObject);
+              const compressedQueryParams = compress(queryParamsObject);
               const compressionKey = this.compressionKey || 'q';
               const anchorCompressionKey = compressionKey === '#';
               redirectUrl = `${anchorCompressionKey ? this.url.split('#')[0] : this.url}${queryParamsTupleArray.length > 0 ?

@@ -19,7 +19,7 @@ import { zip, Subject } from 'rxjs';
 import { filter, tap, first, switchMap, map, pairwise } from 'rxjs/operators';
 import { QueryParamsStoreModule, serviceProvider } from './query-params-store.module';
 import { QPS_CONFIG } from './tokens';
-import { binaryToNumber, compressQueryParams } from './utils';
+import { binaryToNumber, compress } from './utils';
 
 describe('QueryParamsStore', () => {
 
@@ -3555,8 +3555,8 @@ describe('QueryParamsStore', () => {
         openToggles: '60',
         pageSizeWithAllowedValues: '1'
       };
-      const compressed = compressQueryParams(queryParams);
-      const fixedCompressed = compressQueryParams(fixedQueryParams);
+      const compressed = compress(queryParams);
+      const fixedCompressed = compress(fixedQueryParams);
       // tslint:disable-next-line:max-line-length
       ngZone.run(() => { router.navigateByUrl(`/?q=${compressed}`); });
 
@@ -3626,8 +3626,8 @@ describe('QueryParamsStore', () => {
         openToggles: '60',
         pageSizeWithAllowedValues: '1'
       };
-      const compressed = compressQueryParams(queryParams);
-      const fixedCompressed = compressQueryParams(fixedQueryParams);
+      const compressed = compress(queryParams);
+      const fixedCompressed = compress(fixedQueryParams);
       // tslint:disable-next-line:max-line-length
       ngZone.run(() => { router.navigateByUrl(`/?i=${compressed}`); });
 
@@ -3696,8 +3696,8 @@ describe('QueryParamsStore', () => {
         openToggles: '60',
         pageSizeWithAllowedValues: '1'
       };
-      const compressed = compressQueryParams(queryParams);
-      const fixedCompressed = compressQueryParams(fixedQueryParams);
+      const compressed = compress(queryParams);
+      const fixedCompressed = compress(fixedQueryParams);
       // tslint:disable-next-line:max-line-length
       ngZone.run(() => { router.navigateByUrl(`/#${compressed}`); });
 

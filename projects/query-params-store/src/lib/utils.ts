@@ -1,4 +1,4 @@
-import { compressToEncodedURIComponent } from 'lz-string';
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 
 export function binaryToNumber(...args) {
   if (args.length === 1 && Array.isArray(args[0])) { args = args[0]; }
@@ -8,6 +8,14 @@ export function binaryToNumber(...args) {
   }, 0);
 }
 
-export function compressQueryParams(queryParams: object) {
+export function compress(queryParams: object) {
   return compressToEncodedURIComponent(JSON.stringify(queryParams));
+}
+
+export function decompress(compression: string) {
+  try {
+    return JSON.parse(decompressFromEncodedURIComponent(compression));
+  } catch {
+    return null;
+  }
 }
