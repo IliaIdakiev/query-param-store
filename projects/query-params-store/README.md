@@ -258,6 +258,8 @@ app.module.ts
     QueryParamsStoreModule.withConfig({ 
       useCompression: true,
       compressionKey: 'i' // you can use this in order to provide a custom query parameter key that will be for the compressed query params
+      // you can also use '#' in order to use the fragment (anchor) part of the url.
+      // (in this case the url will look like: mydomain.com/path/to/page#COMPRESSED_QPS_STATE)
     })
   ],
   bootstrap: [AppComponent]
