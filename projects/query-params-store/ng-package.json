@@ -2,9 +2,13 @@
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/query-params-store",
   "lib": {
-    "entryFile": "src/public_api.ts"
+    "entryFile": "src/public_api.ts",
+    "umdModuleIds": {
+      "lz-string": "lzString"
+    }
   },
   "whitelistedNonPeerDependencies": [
-    "core-js"
+    "core-js",
+    "lz-string"
   ]
 }
