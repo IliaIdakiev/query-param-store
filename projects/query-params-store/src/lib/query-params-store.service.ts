@@ -32,7 +32,7 @@ import {
 } from './interfaces-and-types';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { QPS_CONFIG } from './tokens';
-import { compress } from './utils';
+import { compress, binaryToNumber } from './utils';
 
 type SelectorFn<T> = (a: any) => T;
 const NOT_PRESENT = Symbol('NOT_PRESENT');
@@ -130,16 +130,16 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       }
 
       let value = (configForKey as any).value;
-      const originalValue = value;
+      let originalValue = value;
 
-      if (!['number', 'string', 'boolean'].includes(typeof value) && value !== null) {
-        // value is not in the supported type => remove invalid configuration
-        if (this.isInDebugMode) {
-          // tslint:disable-next-line:max-line-length
-          console.warn(`Query Params Store: Invalid value configuration for parameter key ${key}! (value can be number, string, boolean or null)`);
-        }
-        return acc;
-      }
+      // if (!['number', 'string', 'boolean'].includes(typeof value) && value !== null) {
+      //   // value is not in the supported type => remove invalid configuration
+      //   if (this.isInDebugMode) {
+      // tslint:disable-next-line:max-line-length
+      //     console.warn(`Query Params Store: Invalid value configuration for parameter key ${key}! (value can be number, string, boolean or null)`);
+      //   }
+      //   return acc;
+      // }
 
       const useCompression = (configForKey as any).useCompression || false;
       const isMultiValueConfig = (configForKey as any).multi || false;
@@ -147,25 +147,38 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       const isBinaryBoolean = this.isBinaryBoolean({ value, typeConvertor, multi: isMultiValueConfig });
 
       if (isBinaryBoolean) {
+        const isArrayValue = Array.isArray(value);
         const configForKeyLength = !configForKey.hasOwnProperty('length') ? undefined : +(configForKey as any).length;
-        value = value.toString(2).split('').slice(0, configForKeyLength).map(val => `${val === '1'}`).reverse();
+        if (typeof value !== 'number' || !isArrayValue ||
+          (isArrayValue && (value as any).map(v => typeof v === 'boolean').includes(false))
+        ) {
+          if (this.isInDebugMode) {
+            // tslint:disable-next-line:max-line-length
+            console.warn(`Query Params Store: Invalid value configuration for parameter key ${key}! (value can be number or Array of booleans)`);
+          }
+          return acc;
+        }
+
+        // in the case of Binary Boolean originalValue should always be a number
+        if (isArrayValue) { originalValue = binaryToNumber(value); }
+        value = isArrayValue ? value :
+          value.toString(2).split('').slice(0, configForKeyLength).map(val => `${val === '1'}`).reverse();
 
         if (value.length < configForKeyLength) {
           value = value.concat(new Array(configForKeyLength - value.length).fill('false'));
         }
       } else if (isMultiValueConfig && value !== null) {
-        if (typeof value !== 'string' && !isBinaryBoolean) {
+        if (typeof value !== 'string') {
           // value should be a string and if we need multiple values we should use the given separator
           // tslint:disable-next-line:max-line-length
           if (this.isInDebugMode) { console.warn(`Query Params Store: Invalid configuration for parameter key ${key}! (value should be a string)`); }
           return acc;
         }
 
-        value = isBinaryBoolean ?
-          value : value === '' ?
-            [] : (value as string).split((configForKey as any).separator || ';');
+        value = value === '' ?
+          [] : (value as string).split((configForKey as any).separator || ';');
 
-        const difference = (!multiCount || isBinaryBoolean) ? 0 : +multiCount - value.length;
+        const difference = !multiCount ? 0 : +multiCount - value.length;
         if (difference > 0) {
           for (let i = 0; i < difference; i++) {
             value.push(typeConvertor === String ? '' : typeConvertor === Number ? 0 : false);
