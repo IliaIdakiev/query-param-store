@@ -10,7 +10,7 @@ import {
   NavigationEnd,
   ResolveStart
 } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, of } from 'rxjs';
+import { ReplaySubject, Subscription, Observable, of as observableOf, of, ConnectableObservable } from 'rxjs';
 import {
   map,
   filter,
@@ -19,7 +19,7 @@ import {
   withLatestFrom,
   first,
   pairwise,
-  shareReplay,
+  publishReplay,
   switchMap,
   mapTo
 } from 'rxjs/operators';
@@ -583,7 +583,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
       distinctUntilChanged()
     ).subscribe(this.snapshot);
 
-    this.store = this.constructStore().pipe(shareReplay(1));
+    this.store = this.constructStore().pipe(publishReplay(1));
+    (this.store as ConnectableObservable<T>).connect();
   }
 
   select<R = any>(
