@@ -399,7 +399,7 @@ export class QueryParamsStore<T = any> implements OnDestroy {
 
             const checkResult = conversionResults.map(v => {
               if (!v.hasValidConversion) { return 'invalid'; }
-              if (allowedValues && !allowedValues.includes(v)) { return 'not-allowed'; }
+              if (allowedValues && !allowedValues.includes(v.convertedValue)) { return 'not-allowed'; }
               return null;
             });
             const hasInvalidValue = checkResult.includes('invalid');
