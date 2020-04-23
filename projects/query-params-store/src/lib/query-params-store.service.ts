@@ -600,6 +600,10 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     return select;
   }
 
+  first<R>(selector: string | SelectorFn<R>, predicate?: null, defaultValue?: R) {
+    return this.select(selector).pipe(first(predicate, defaultValue));
+  }
+
   private _match(
     snapshot: ActivatedRouteSnapshot,
     allowedValues: IAllowedValuesConfig | Observable<IAllowedValuesConfig>,
