@@ -600,7 +600,8 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     return select;
   }
 
-  first<R>(selector: string | SelectorFn<R>, predicate?: null, defaultValue?: R) {
+  first<R>(selector?: string | SelectorFn<R>, predicate?: null, defaultValue?: R) {
+    selector = selector || (s => s);
     return this.select(selector).pipe(first(predicate, defaultValue));
   }
 
