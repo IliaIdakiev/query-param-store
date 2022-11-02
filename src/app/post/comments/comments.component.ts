@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, Inp
 import { QueryParamsStore } from 'query-params-store';
 import { map, shareReplay, first, debounceTime, withLatestFrom } from 'rxjs/operators';
 import { Observable, fromEvent, Subject } from 'rxjs';
-import { Router, ActivatedRoute } from '@angular/router';
-import { appQueryBuilder } from '../../shared/utils';
+import { Router } from '@angular/router';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-comments',
@@ -11,9 +11,9 @@ import { appQueryBuilder } from '../../shared/utils';
   styleUrls: ['./comments.component.scss']
 })
 export class CommentsComponent implements OnDestroy, AfterViewInit {
-  @ViewChild('filterInput', { static: true }) filterInput: ElementRef;
+  @ViewChild('filterInput', { static: true }) filterInput!: ElementRef;
   isAlive$: Subject<void> = new Subject<void>();
-  @Input() postId: number;
+  @Input() postId!: number;
 
   displayedColumns: string[] = ['id', 'name', 'email'];
 
@@ -21,9 +21,9 @@ export class CommentsComponent implements OnDestroy, AfterViewInit {
   filter$: Observable<string>;
   page$: Observable<number>;
 
-  selectedPostId: number;
+  selectedPostId!: number;
 
-  getValue = (v) => v[1] || '';
+  getValue = (v: any[]) => v[1] || '';
 
   constructor(private queryParamsStore: QueryParamsStore, private router: Router) {
     this.pageSize$ = queryParamsStore.select('pageSize').pipe(map(this.getValue), shareReplay());
@@ -31,7 +31,7 @@ export class CommentsComponent implements OnDestroy, AfterViewInit {
     this.page$ = queryParamsStore.select('page').pipe(map(this.getValue), shareReplay());
   }
 
-  onPageChange(data: { length: number, pageIndex: number, pageSize: number, previousPageIndex: number }) {
+  onPageChange(data: PageEvent) {
     this.queryParamsStore.select(state => [state.page, state.pageSize]).pipe(first()).subscribe(([page, pageSize]) => {
       this.router.navigate([], {
         queryParams: {

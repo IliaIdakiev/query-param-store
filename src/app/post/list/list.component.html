@@ -1,5 +1,6 @@
 <app-loader [isLoading]="hgResolve.isResolving"></app-loader>
-<ng-container #hgResolve="hgResolve" hgResolve appListResolver [refresh]="dialogRef" #listResolver="appListResolver">
+<ng-container #hgResolve="hgResolve" hgResolve appListResolver [refresh]="$any(dialogRef)"
+  #listResolver="appListResolver">
   <div *ngIf="hgResolve.isErrored" class="error">{{hgResolve.errors | json}}</div>
   <div id="filter-container" [hidden]="hgResolve.isResolving || hgResolve.isErrored">
     <div>
@@ -20,7 +21,7 @@
   </div>
 
   <ng-container *ngIf="!hgResolve.isResolving && !hgResolve.isErrored">
-    <table mat-table [dataSource]="(listResolver.data$ | async)?.posts" class="mat-elevation-z8">
+    <table mat-table [dataSource]="(listResolver.data$ | async)?.posts!" class="mat-elevation-z8">
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef> Id </th>
         <td mat-cell *matCellDef="let post"> {{post.id}} </td>
@@ -44,7 +45,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
     <mat-paginator [length]="(listResolver.data$ | async)?.totalCount" [pageSize]="pageSize$ | async"
-      [pageIndex]="(page$ | async) - 1" [pageSizeOptions]="[10,20,30]" (page)="onPageChange($event)">
+      [pageIndex]="((page$ | async) || 0) - 1" [pageSizeOptions]="[10,20,30]" (page)="onPageChange($event)">
     </mat-paginator>
   </ng-container>
 </ng-container>

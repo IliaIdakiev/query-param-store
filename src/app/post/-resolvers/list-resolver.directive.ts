@@ -17,13 +17,13 @@ import { filter as observableFilter, startWith, distinctUntilChanged } from 'rxj
   ],
   exportAs: 'appListResolver'
 })
-export class ListResolverDirective extends Resolver<{ posts: IPost[]; totalCount: number; }> {
+export class ListResolverDirective extends Resolver<{ posts: IPost[] | null; totalCount: number; }> {
 
   // tslint:disable-next-line:no-input-rename
-  @Input('refresh') @toObservable refresh$: Observable<any>;
-  config = ResolverConfig.AutoResolve;
+  @Input('refresh') @toObservable refresh$!: Observable<any>;
+  override config = ResolverConfig.AutoResolve;
 
-  selector = (name) => s => { const v = s[name]; return Array.isArray(v) ? v[0] : v; };
+  selector = (name: string) => (s: any) => { const v = s[name]; return Array.isArray(v) ? v[0] : v; };
 
   constructor(postService: PostService, queryParamsStore: QueryParamsStore) {
     super(([page, pageSize, filter, sort]) => postService.getAll({ page, pageSize, filter, sort }), () => [

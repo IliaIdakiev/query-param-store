@@ -16,7 +16,7 @@ export class UserService {
     const query = apiQueryBuilder(data);
     return this.http.get<IUser[]>(
       `https://jsonplaceholder.typicode.com/users${query}`, { observe: 'response' }).pipe(
-        map(res => ({ users: res.body, totalCount: +res.headers.get('x-total-count') }))
+        map(res => ({ users: res.body, totalCount: +(res.headers.get('x-total-count') || 0) }))
       );
   }
 

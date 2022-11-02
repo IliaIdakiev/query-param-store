@@ -4,8 +4,6 @@ import { Router } from '@angular/router';
 import { IQueryParamsStoreModuleConfig } from './interfaces-and-types';
 import { QPS_CONFIG } from './tokens';
 
-
-
 export function qpsFactory(router: Router, config: IQueryParamsStoreModuleConfig) {
   const instance = new QueryParamsStore(router, config);
   return instance;
@@ -27,7 +25,7 @@ export const serviceProvider: Provider = {
   exports: []
 })
 export class QueryParamsStoreModule {
-  static withConfig(config: IQueryParamsStoreModuleConfig): ModuleWithProviders {
+  static withConfig(config: IQueryParamsStoreModuleConfig): ModuleWithProviders<QueryParamsStoreModule> {
     return {
       ngModule: QueryParamsStoreModule,
       providers: [

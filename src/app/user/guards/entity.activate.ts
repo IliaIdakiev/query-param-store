@@ -8,6 +8,6 @@ export class EntityActivate implements CanActivate {
   constructor(private queryParamsStore: QueryParamsStore) { }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    return this.queryParamsStore.canActivate({ disableDialog: { match: [null, false] } }, route);
+    return this.queryParamsStore.canActivate({ disableDialog: { match: [false, false] } }, route);
   }
 }

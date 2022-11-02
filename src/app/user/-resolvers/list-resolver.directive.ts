@@ -17,13 +17,13 @@ import { filter as observableFilter, startWith } from 'rxjs/operators';
   ],
   exportAs: 'appListResolver'
 })
-export class ListResolverDirective extends Resolver<{ users: IUser[]; totalCount: number; }> {
+export class ListResolverDirective extends Resolver<{ users: IUser[] | null; totalCount: number; }> {
 
   // tslint:disable-next-line:no-input-rename
-  @Input('refresh') @toObservable refresh$: Observable<any>;
-  config = ResolverConfig.AutoResolve;
+  @Input('refresh') @toObservable refresh$!: Observable<any>;
+  override config = ResolverConfig.AutoResolve;
 
-  selector = (name) => s => { const v = s[name]; return Array.isArray(v) ? v[0] : v; };
+  selector = (name: string) => (s: any) => { const v = s[name]; return Array.isArray(v) ? v[0] : v; };
 
   constructor(userService: UserService, queryParamsStore: QueryParamsStore) {
     super(([page, pageSize, filter, sort]) => userService.getAll({ page, pageSize, filter, sort }), () => [

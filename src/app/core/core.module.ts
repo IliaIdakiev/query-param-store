@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, RouteReuseStrategy } from '@angular/router';
 import { NavigationComponent } from './navigation/navigation.component';
 import { DialogRouteReuseStrategy } from './dialog-route-reuse-strategy';
-import { MatToolbarModule, MatButtonModule } from '@angular/material';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [

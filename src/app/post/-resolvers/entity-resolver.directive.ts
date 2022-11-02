@@ -18,7 +18,7 @@ import { RouterHelperService } from '../../shared/router-helper.service';
 })
 export class EntityResolverDirective extends Resolver<IPost> {
 
-  config = ResolverConfig.AutoResolve;
+  override config = ResolverConfig.AutoResolve;
 
   constructor(postService: PostService, routerHelper: RouterHelperService) {
     super(

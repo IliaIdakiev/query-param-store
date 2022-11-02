@@ -1,5 +1,5 @@
 import { Component, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, Observable, fromEvent } from 'rxjs';
 import { QueryParamsStore } from 'query-params-store';
@@ -15,6 +15,7 @@ import {
 import { PostEntityComponent } from '../post-entity/post-entity.component';
 import { RouterHelperService } from '../../shared/router-helper.service';
 import { appQueryBuilder } from '../../shared/utils';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-list',
@@ -23,9 +24,9 @@ import { appQueryBuilder } from '../../shared/utils';
 })
 export class ListComponent implements AfterViewInit, OnDestroy {
 
-  @ViewChild('filterInput', { static: true }) filterInput: ElementRef;
+  @ViewChild('filterInput', { static: true }) filterInput!: ElementRef;
   isAlive$: Subject<void> = new Subject<void>();
-  dialogRef: MatDialogRef<PostEntityComponent, any>;
+  dialogRef!: MatDialogRef<PostEntityComponent, any> | null;
 
   displayedColumns: string[] = ['id', 'title', 'userId', 'actions'];
 
@@ -35,7 +36,7 @@ export class ListComponent implements AfterViewInit, OnDestroy {
 
   isDialogDisabled$ = this.queryParamsStore.select<boolean>('disableDialog');
 
-  getValue = v => Array.isArray(v) ? v[0] : v;
+  getValue = (v: any) => Array.isArray(v) ? v[0] : v;
 
   constructor(
     dialog: MatDialog,
@@ -70,7 +71,7 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  onPageChange(data: { length: number, pageIndex: number, pageSize: number, previousPageIndex: number }) {
+  onPageChange(data: PageEvent) {
     this.router.navigate([], {
       queryParams: {
         pageSize: data.pageSize,

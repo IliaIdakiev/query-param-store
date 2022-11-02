@@ -1,5 +1,4 @@
 import { Route } from '@angular/router';
-import { Observable } from 'rxjs';
 
 export interface IQueryParamsStoreModuleConfig {
   debug?: boolean;
@@ -57,7 +56,7 @@ export type IQueryParamsStoreRoutes<T = any> = IQueryParamsStoreRoute<T>[];
 
 export interface IAllowedValuesConfig {
   [paramName: string]: {
-    match: string | number | boolean | (string | number | boolean)[],
+    match: string | number | boolean | null | (string | number | boolean | null)[],
     default?: string | number | boolean
   };
 }

@@ -1,11 +1,9 @@
-import { Component, Inject, ViewChild, OnDestroy } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material';
-import { Router, ActivatedRoute } from '@angular/router';
-import { PostService } from '../post.service';
-import { Observable, of, Subject } from 'rxjs';
+import { Component, Inject, OnDestroy } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { Observable, Subject } from 'rxjs';
 import { IPost } from '../../shared/interfaces';
-import { shareReplay, map, takeUntil, first } from 'rxjs/operators';
-import { NgForm } from '@angular/forms';
+import { first } from 'rxjs/operators';
 import { QueryParamsStore } from 'query-params-store';
 
 @Component({
@@ -18,7 +16,7 @@ export class PostEntityComponent implements OnDestroy {
   isAlive$: Subject<void> = new Subject<void>();
   completed$ = this.queryParamsStore.select<boolean>('completed');
 
-  post$: Observable<IPost>;
+  post$!: Observable<IPost>;
 
   emptyPost: IPost = {
     title: '',

@@ -4,9 +4,9 @@ export class DialogRouteReuseStrategy extends RouteReuseStrategy {
   public shouldDetach(): boolean { return false; }
   public store(): void { }
   public shouldAttach(): boolean { return false; }
-  public retrieve(): DetachedRouteHandle { return null; }
+  public retrieve(): DetachedRouteHandle { return false; }
   public shouldReuseRoute(future: ActivatedRouteSnapshot, current: ActivatedRouteSnapshot): boolean {
     return (future.routeConfig === current.routeConfig)
-      || future.data.dialogComponentReuse;
+      || future.data['dialogComponentReuse'];
   }
 }
