@@ -1,8 +1,4 @@
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+/* You can add global styles to this file, and also import other style files */
 
-body {
-  padding: 0;
-  margin: 0;
-}
-
-.scroll {overflow: scroll;}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

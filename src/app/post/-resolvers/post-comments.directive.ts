@@ -17,12 +17,12 @@ import { filter as observableFilter, startWith, map, distinctUntilChanged, filte
   ],
   exportAs: 'appPostCommentsListResolver'
 })
-export class PostCommentsResolverDirective extends Resolver<{ comments: IComment[]; totalCount: number; }> {
+export class PostCommentsResolverDirective extends Resolver<{ comments: IComment[] | null; totalCount: number; }> {
 
   // tslint:disable-next-line:no-input-rename
-  @Input('postId') @toObservable postId$: Observable<number>;
+  @Input('postId') @toObservable postId$!: Observable<number>;
 
-  config = ResolverConfig.AutoResolve;
+  override config = ResolverConfig.AutoResolve;
 
   constructor(postService: PostService, queryParamsStore: QueryParamsStore) {
     super(([postId, page, pageSize, f, sort]) => postService.getAllComments({ postId, page, pageSize, filter: f, sort }), () => [

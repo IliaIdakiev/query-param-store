@@ -18,7 +18,7 @@ import { RouterHelperService } from '../../shared/router-helper.service';
 })
 export class EntityResolverDirective extends Resolver<IUser> {
 
-  config = ResolverConfig.AutoResolve;
+  override config = ResolverConfig.AutoResolve;
 
   constructor(userService: UserService, routerHelper: RouterHelperService) {
     super(

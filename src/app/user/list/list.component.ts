@@ -1,6 +1,6 @@
 import { Component, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { Subject, Observable, fromEvent } from 'rxjs';
 import { QueryParamsStore } from 'query-params-store';
 import {
@@ -15,6 +15,7 @@ import {
 import { UserEntityComponent } from '../user-entity/user-entity.component';
 import { RouterHelperService } from '../../shared/router-helper.service';
 import { appQueryBuilder } from '../../shared/utils';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-list',
@@ -23,9 +24,9 @@ import { appQueryBuilder } from '../../shared/utils';
 })
 export class ListComponent implements AfterViewInit, OnDestroy {
 
-  @ViewChild('filterInput', { static: true }) filterInput: ElementRef;
+  @ViewChild('filterInput', { static: true }) filterInput!: ElementRef;
   isAlive$: Subject<void> = new Subject<void>();
-  dialogRef: MatDialogRef<UserEntityComponent, any>;
+  dialogRef!: MatDialogRef<UserEntityComponent, any> | null;
 
   displayedColumns: string[] = ['id', 'username', 'email', 'actions'];
 
@@ -65,7 +66,7 @@ export class ListComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  onPageChange(data: { length: number, pageIndex: number, pageSize: number, previousPageIndex: number }) {
+  onPageChange(data: PageEvent) {
     this.router.navigate([], {
       queryParams: {
         pageSize: data.pageSize,

@@ -3346,7 +3346,7 @@ describe('QueryParamsStore', () => {
         data: {
           storeConfig: {
             stateConfig: {
-              completed: false
+              completed: true
             }
           }
         },

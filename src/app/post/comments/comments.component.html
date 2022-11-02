@@ -1,5 +1,5 @@
 <app-loader [isLoading]="hgResolve.isResolving"></app-loader>
-<ng-container #hgResolve="hgResolve" hgResolve appPostCommentsListResolver [postId]="postId"
+<ng-container #hgResolve="hgResolve" hgResolve appPostCommentsListResolver [postId]="$any(postId)"
   #resolver="appPostCommentsListResolver">
   <div id="filter-container">
     <div>
@@ -12,7 +12,7 @@
     <div>
     </div>
   </div>
-  <table mat-table [dataSource]="(resolver.data$ | async)?.comments" class="mat-elevation-z8">
+  <table mat-table [dataSource]="(resolver.data$ | async)?.comments!" class="mat-elevation-z8">
     <ng-container matColumnDef="id">
       <th mat-header-cell *matHeaderCellDef> Id </th>
       <td mat-cell *matCellDef="let comment"> {{comment.id}} </td>
@@ -30,6 +30,6 @@
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
   </table>
   <mat-paginator [length]="(resolver.data$ | async)?.totalCount" [pageSize]="pageSize$ | async"
-    [pageIndex]="(page$ | async) - 1" [pageSizeOptions]="[10,20,30]" (page)="onPageChange($event)">
+    [pageIndex]="((page$ | async) || 0) - 1" [pageSizeOptions]="[10,20,30]" (page)="onPageChange($event)">
   </mat-paginator>
 </ng-container>

@@ -25,10 +25,10 @@
   </div>
   <ng-container *ngIf="(entityResolver.data$ | async)?.id">
     <h3>Post Comments:</h3>
-    <app-comments [postId]="(entityResolver.data$ | async)?.id"></app-comments>
+    <app-comments [postId]="(entityResolver.data$ | async)?.id!"></app-comments>
   </ng-container>
-  <button mat-button [color]="(completed$ | async) ? 'primary' : 'warn'"
-    (click)="toggleCompleted()">{{ (completed$ | async) ? 'Activate' : 'Deactivate' }} navigation based on query
+  <button mat-button [color]="(completed$ | async) ? 'primary' : 'warn'" (click)="toggleCompleted()">{{ (completed$ |
+    async) ? 'Activate' : 'Deactivate' }} navigation based on query
     parameter</button>
   <div mat-dialog-actions>
     <button mat-button (click)="cancelHandler()">Cancel</button>

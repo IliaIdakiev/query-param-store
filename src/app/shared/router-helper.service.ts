@@ -19,24 +19,24 @@ export class RouterHelperService implements OnDestroy {
   constructor(router: Router) {
 
     const navigationStart$ = router.events.pipe(
-      filter<NavigationStart>(e => e instanceof NavigationStart),
+      filter((e): e is NavigationStart => e instanceof NavigationStart),
       startWith(null)
     );
 
     const navigationCancel$ = router.events.pipe(
-      filter<NavigationCancel>(e => e instanceof NavigationCancel),
-      mapTo(false)
+      filter((e): e is NavigationCancel => e instanceof NavigationCancel),
+      map(() => false)
     );
     const navigationEnd$ = router.events.pipe(
-      filter<NavigationCancel>(e => e instanceof NavigationEnd),
-      mapTo(true)
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(() => true)
     );
 
 
     this.subscription = navigationStart$.pipe(
       tap(() => this._routeData$.next(null)),
       switchMap(() => zip(router.events.pipe(
-        filter<ActivationEnd | ChildActivationEnd>(e => e instanceof ActivationEnd || e instanceof ChildActivationEnd),
+        filter((e): e is ActivationEnd | ChildActivationEnd => e instanceof ActivationEnd || e instanceof ChildActivationEnd),
         scan<ActivationEnd | ChildActivationEnd, any>(({ data, params }, { snapshot }) =>
           ({ data: { ...data, ...snapshot.data }, params: { ...params, ...snapshot.params } }), { data: {}, params: {} })
       ), race(navigationEnd$, navigationCancel$).pipe(take(1))))

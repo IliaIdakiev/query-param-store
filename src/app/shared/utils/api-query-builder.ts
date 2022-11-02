@@ -18,13 +18,13 @@ const queryParamMap = {
 
 export function apiQueryBuilder(data: IQueryData) {
   return Object.keys(data).reduce((acc, key) => {
-    const currentValue = data[key];
+    const currentValue = (data as any)[key];
     if (!currentValue) { return acc; }
     if (acc === '') {
       acc = '?';
     } else if (acc[acc.length - 1]) {
       acc += '&';
     }
-    return acc += queryParamMap[key](data[key]);
+    return acc += (queryParamMap as any)[key]((data as any)[key]);
   }, '');
 }

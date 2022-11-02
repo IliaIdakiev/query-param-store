@@ -12,7 +12,7 @@ export class LoaderComponent implements OnChanges {
   showMessage = false;
 
   ngOnChanges(simpleChanges: SimpleChanges) {
-    if (simpleChanges.isLoading.currentValue) {
+    if (simpleChanges['isLoading'].currentValue) {
       setTimeout(() => {
         if (this.isLoading === false) { return; }
         this.showMessage = true;

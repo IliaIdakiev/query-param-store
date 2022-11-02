@@ -1,5 +1,5 @@
 import { Component, Inject, ViewChild, OnDestroy } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Observable, of, Subject } from 'rxjs';
 import { IPost } from '../../shared/interfaces';
@@ -17,7 +17,7 @@ export class UserEntityComponent implements OnDestroy {
   isAlive$: Subject<void> = new Subject<void>();
   completed$ = this.queryParamsStore.select<boolean>('completed');
 
-  post$: Observable<IPost>;
+  post$!: Observable<IPost>;
 
   emptyPost: IPost = {
     title: '',
@@ -42,7 +42,7 @@ export class UserEntityComponent implements OnDestroy {
 
   toggleCompleted() {
     this.queryParamsStore.select('completed').pipe(first()).subscribe(completed => {
-      this.router.navigate([], { queryParams: { completed: completed ? null : false }, queryParamsHandling: 'merge' });
+      this.router.navigate([], { queryParams: { completed: completed ? false : null }, queryParamsHandling: 'merge' });
     });
   }
 

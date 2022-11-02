@@ -1,15 +1,13 @@
 {
   "name": "query-params-store",
-  "version": "4.2.1",
+  "version": "0.0.1",
   "peerDependencies": {
-    "@angular/common": "^8.0.0",
-    "@angular/core": "^8.0.0"
-  },
-  "dependencies": {
+    "@angular/common": "^14.2.0",
+    "@angular/core": "^14.2.0",
     "lz-string": "^1.4.4"
   },
-  "devDependencies": {
-    "@types/lz-string": "^1.3.34"
+  "dependencies": {
+    "tslib": "^2.3.0"
   },
   "author": {
     "name": "Iliya Idakiev",

@@ -35,7 +35,10 @@ const routes: IQueryParamsStoreRoutes = [
           dialogComponentReuse: true,
           dialogId: 'add-post',
           storeConfig: {
-            inherit: true
+            inherit: true,
+            stateConfig: {
+              completed: true
+            }
           }
         }
       },
@@ -48,7 +51,10 @@ const routes: IQueryParamsStoreRoutes = [
           dialogComponentReuse: true,
           dialogId: 'edit-user',
           storeConfig: {
-            inherit: true
+            inherit: true,
+            stateConfig: {
+              completed: true
+            }
           }
         }
       }
