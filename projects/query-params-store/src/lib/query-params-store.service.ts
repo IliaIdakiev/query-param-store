@@ -10,7 +10,7 @@ import {
   NavigationEnd,
   ResolveStart
 } from '@angular/router';
-import { ReplaySubject, Subscription, Observable, of as observableOf, of, ConnectableObservable } from 'rxjs';
+import { ReplaySubject, Subscription, Observable, of as observableOf, of, ConnectableObservable, defer } from 'rxjs';
 import {
   map,
   filter,
@@ -597,12 +597,14 @@ export class QueryParamsStore<T = any> implements OnDestroy {
     disableDistinctUntilChanged: boolean = false,
     compare?: (x: any, y: any) => boolean,
   ): Observable<R> {
-    const fn = typeof selector === 'function' ? selector : (state: any) => state[selector];
-    let select = this.store.pipe(map(fn));
-    if (!disableDistinctUntilChanged) {
-      select = select.pipe(distinctUntilChanged(compare));
-    }
-    return select;
+    return defer(() => {
+      const fn = typeof selector === 'function' ? selector : (state: any) => state[selector];
+      let select = this.store.pipe(map(fn));
+      if (!disableDistinctUntilChanged) {
+        select = select.pipe(distinctUntilChanged(compare));
+      }
+      return select;
+    })
   }
 
   first<R>(selector?: string | SelectorFn<R>, predicate?: null, defaultValue?: R) {
